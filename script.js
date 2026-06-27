@@ -1119,7 +1119,7 @@ function buildPrizeVisualStyleAttr(prize) {
 }
 
 function buildPrizePreviewAttrs(prize, options = {}) {
-  if (!prize?.image) {
+  if (!prize?.image || options.previewable === false) {
     return "";
   }
 
@@ -1196,6 +1196,46 @@ function updatePrizePreviewTrigger(container, prize, options = {}) {
   container.setAttribute("aria-label", `查看${title}原图`);
 }
 
+function getPrizeRarity(prize) {
+  const weights = SITE_CONFIG.prizes.map((item) => item.weight);
+  const minWeight = Math.min(...weights);
+  const maxWeight = Math.max(...weights);
+  const range = Math.max(1, maxWeight - minWeight);
+  const score = Math.max(1, Math.min(5, Math.round(((maxWeight - prize.weight) / range) * 4) + 1));
+  const labels = {
+    1: "常驻款",
+    2: "惊喜款",
+    3: "稀有款",
+    4: "珍藏款",
+    5: "超稀有"
+  };
+  const totalWeight = SITE_CONFIG.prizes.reduce((sum, item) => sum + item.weight, 0);
+  const chance = totalWeight > 0 ? (prize.weight / totalWeight) * 100 : 0;
+  const chanceLabel = chance < 10 ? `${chance.toFixed(1)}%` : `${Math.round(chance)}%`;
+
+  return {
+    score,
+    label: labels[score],
+    chanceLabel
+  };
+}
+
+function buildPrizeRarityMarkup(prize) {
+  const rarity = getPrizeRarity(prize);
+  const gems = Array.from({ length: 5 }, (_, index) => {
+    const activeClass = index < rarity.score ? " is-active" : "";
+    return `<span class="gift-rarity__gem${activeClass}"></span>`;
+  }).join("");
+
+  return `
+    <div class="gift-rarity gift-rarity--score-${rarity.score}" aria-label="稀有度 ${rarity.score}/5，抽中率约 ${rarity.chanceLabel}">
+      <span class="gift-rarity__label">${rarity.label}</span>
+      <span class="gift-rarity__gems" aria-hidden="true">${gems}</span>
+      <span class="gift-rarity__chance">${rarity.chanceLabel}</span>
+    </div>
+  `;
+}
+
 function renderGiftGrid() {
   const giftMarkup = SITE_CONFIG.prizes
     .map((prize) => {
@@ -1209,11 +1249,25 @@ function renderGiftGrid() {
       `;
     })
     .join("");
+  const giftModalMarkup = SITE_CONFIG.prizes
+    .map((prize) => {
+      const wideClass = prize.featured ? " gift-item--wide" : "";
+      const previewAttrs = buildPrizePreviewAttrs(prize, { alt: prize.name });
+      return `
+        <article class="gift-item gift-item--modal-preview${wideClass}" data-prize-id="${prize.id}"${previewAttrs ? ` ${previewAttrs}` : ""}>
+          ${buildPrizeVisualWrapper(prize, "gift-item__icon prize-media", { alt: prize.name, loading: "lazy", previewable: false })}
+          <h4 class="gift-item__title">${prize.name}</h4>
+          <p class="gift-item__subtitle">${prize.subtitle}</p>
+          ${buildPrizeRarityMarkup(prize)}
+        </article>
+      `;
+    })
+    .join("");
 
   elements.giftGrid.innerHTML = giftMarkup;
 
   if (elements.giftModalGrid) {
-    elements.giftModalGrid.innerHTML = giftMarkup;
+    elements.giftModalGrid.innerHTML = giftModalMarkup;
   }
 }
 
