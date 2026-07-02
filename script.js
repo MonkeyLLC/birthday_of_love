@@ -5,8 +5,16 @@ const MATTER = window.Matter ?? null;
 // All editable copy and content live here so the page stays easy to personalize.
 const SITE_CONFIG = {
   topbarTitle: "从 2022 开始喜欢你",
-  birthdayDate: "2026-07-05",
-  relationshipStart: "2022-07-05",
+  // Update this target to change the birthday countdown date and time.
+  birthday: {
+    year: 2026,
+    month: 7,
+    day: 5,
+    hour: 0,
+    minute: 0,
+    second: 0
+  },
+  relationshipStart: "2022-02-14",
   letter: {
     greeting: "给最特别的你",
     paragraphs: [
@@ -34,6 +42,23 @@ const SITE_CONFIG = {
         "https://lh3.googleusercontent.com/aida-public/AB6AXuA6OLNyS4RRuawy-5YsJweMlyTxKpRQWDyBJGWYBcNHeKrC4-6ES26HoSvqrIBwVP7fPMLqjwmtUJ3pkrQEszWdFqkgM5qYZD8dg_4jrlvbih6W5RzDP4-c5P0az8cyGHDQIYYy9Wzcqq3P2Z3pBYfhucw1A2719CSe2aJkdYlvEqtFTRd9ikcHL3y096pPFb-MmbkFXr0DWCT1X_1OW5gpTsdptdAAl_j_92UoXlxqFdKQDJOONI6h_FHbNzJYWvvqfbEnBqm4I9Zg"
     }
   ],
+  memoryVideo: {
+    title: "\u0037\u67082\u65e5",
+    caption: "\u70b9\u4e00\u4e0b\uff0c\u64ad\u653e\u8fd9\u6bb5\u60f3\u7559\u7ed9\u4f60\u7684\u753b\u9762",
+    buttonLabel: "\u64ad\u653e 7 \u6708 2 \u65e5\u89c6\u9891",
+    lockedCover: "assets/videos/letter-0702-locked.png",
+    unlockedCover: "assets/videos/letter-0702-cover.jpg",
+    src: "assets/videos/letter-0702.mp4"
+  },
+  backgroundMusic: {
+    volume: 0.42,
+    tracks: [
+      "assets/audio/music/01-love-is-you.mp3",
+      "assets/audio/music/02-when-you.mp3",
+      "assets/audio/music/03-you-i.mp3",
+      "assets/audio/music/04-simple-love.mp3"
+    ]
+  },
   prizes: [
     {
       id: "heytea-cake",
@@ -46,12 +71,21 @@ const SITE_CONFIG = {
     },
     {
       id: "wechat-red-packet",
-      name: "520 微信红包",
-      subtitle: "心意到账，爱意也到账",
-      description: "专属 520 微信红包一份，数字不大不小，刚好把偏爱说清楚。",
+      name: "520红包",
+      subtitle: "甜甜心意，直接到账",
+      description: "一份 520 红包，爱意和惊喜一起送到你手上。",
       image: "assets/prizes/wechat-red-packet-520.png",
       tone: "rose",
-      weight: 18
+      weight: 25
+    },
+    {
+      id: "lina-bell-doll",
+      name: "玲娜贝儿公仔",
+      subtitle: "软萌陪伴，抱起来就开心",
+      description: "把这只甜甜的玲娜贝儿公仔带回家，之后每次看到它都会想起今天的惊喜。",
+      image: "assets/prizes/lina-bell-doll.png",
+      tone: "peach",
+      weight: 20
     },
     {
       id: "dji-pocket-3",
@@ -78,7 +112,7 @@ const SITE_CONFIG = {
       description: "一张生日快乐特别卡，外加我认真准备好的祝福，愿你岁岁都被偏爱。",
       image: "assets/prizes/happy-birthday-card.png",
       tone: "lavender",
-      weight: 14
+      weight: 46
     },
     {
       id: "takeout-mystery-box",
@@ -90,6 +124,26 @@ const SITE_CONFIG = {
       weight: 18
     },
     {
+      id: "mystery-grand-gift",
+      name: "神秘大礼",
+      subtitle: "先保密，等你亲手开启",
+      description: "压轴登场的神秘大礼，先把期待值拉满，等拆开的时候再告诉你答案。",
+      image: "assets/prizes/mystery-grand-gift.png",
+      tone: "lavender",
+      weight: 9
+    },
+    {
+      id: "dji-pocket-4",
+      name: "大疆 Pocket 4",
+      subtitle: "拆开神秘大礼，答案就是它",
+      description: "神秘大礼正式揭晓，是一份大疆 Pocket 4，以后一起去记录更多值得收藏的瞬间。",
+      image: "assets/prizes/dji-pocket-4.png",
+      tone: "cream",
+      weight: 1,
+      imageFit: "cover",
+      imagePosition: "center"
+    },
+    {
       id: "skincare-reimbursement",
       name: "520 护肤品报销额度",
       subtitle: "想买的护肤品放心挑",
@@ -98,7 +152,8 @@ const SITE_CONFIG = {
       tone: "pink",
       weight: 17
     }
-  ]
+  ],
+  prizePoolIds: ["happy-birthday", "wechat-red-packet", "lina-bell-doll", "mystery-grand-gift"]
 };
 
 const elements = {
@@ -137,6 +192,8 @@ const elements = {
   cakeButton: document.getElementById("cake-button"),
   soundToggleButton: document.getElementById("sound-toggle-button"),
   soundToggleIcon: document.getElementById("sound-toggle-icon"),
+  musicToggleButton: document.getElementById("music-toggle-button"),
+  musicToggleIcon: document.getElementById("music-toggle-icon"),
   hugButton: document.getElementById("hug-button"),
   drawButton: document.getElementById("draw-button"),
   restoreGachaButton: document.getElementById("restore-gacha-button"),
@@ -184,6 +241,7 @@ const elements = {
   modalIcon: document.getElementById("modal-icon"),
   modalTitle: document.getElementById("modal-title"),
   modalCopy: document.getElementById("modal-copy"),
+  modalRevealButton: document.getElementById("modal-reveal-button"),
   modalClose: document.getElementById("modal-close"),
   imagePreviewModal: document.getElementById("image-preview-modal"),
   imagePreviewBackdrop: document.getElementById("image-preview-backdrop"),
@@ -191,6 +249,10 @@ const elements = {
   imagePreviewClose: document.getElementById("image-preview-close"),
   imagePreviewImage: document.getElementById("image-preview-image"),
   imagePreviewTitle: document.getElementById("image-preview-title"),
+  videoPreviewModal: document.getElementById("video-preview-modal"),
+  videoPreviewBackdrop: document.getElementById("video-preview-backdrop"),
+  videoPreviewDialog: document.querySelector("#video-preview-modal .video-preview-modal__dialog"),
+  videoPreviewPlayer: document.getElementById("video-preview-player"),
   toast: document.getElementById("toast"),
   particles: document.getElementById("particles")
 };
@@ -202,8 +264,21 @@ const GACHA_PHASE = Object.freeze({
   OPENING: "opening"
 });
 
+const AVAILABLE_VIEWS = Object.freeze(["letter", "gacha"]);
 const GACHA_CAPSULE_TONES = ["pink", "lavender", "peach", "cream", "rose", "pearl"];
-const DEFAULT_GACHA_COINS = 5;
+const GACHA_FIXED_SEQUENCE = Object.freeze([
+  "happy-birthday",
+  "happy-birthday",
+  "lina-bell-doll",
+  "happy-birthday",
+  "happy-birthday",
+  "wechat-red-packet",
+  "happy-birthday",
+  "happy-birthday",
+  "happy-birthday",
+  "mystery-grand-gift"
+]);
+const DEFAULT_GACHA_COINS = GACHA_FIXED_SEQUENCE.length;
 const GACHA_PHYSICS_CONFIG = Object.freeze({
   drawDuration: 980,
   gravityScale: 0.001,
@@ -225,6 +300,12 @@ const AUDIO_UI_COPY = Object.freeze({
   enableLabel: "\u5f00\u542f\u58f0\u97f3",
   enabledToast: "\u58f0\u97f3\u5df2\u7ecf\u6253\u5f00\u5566",
   disabledToast: "\u58f0\u97f3\u5df2\u7ecf\u5173\u95ed\u5566"
+});
+const MUSIC_UI_COPY = Object.freeze({
+  pauseLabel: "\u6682\u505c\u80cc\u666f\u97f3\u4e50",
+  playLabel: "\u7ee7\u7eed\u64ad\u653e\u80cc\u666f\u97f3\u4e50",
+  playingToast: "\u80cc\u666f\u97f3\u4e50\u7ee7\u7eed\u64ad\u653e\u5566",
+  pausedToast: "\u80cc\u666f\u97f3\u4e50\u5df2\u6682\u505c"
 });
 const GACHA_QUICKBAR_COPY = Object.freeze({
   balanceLabel: "\u626d\u86cb\u5e01",
@@ -250,16 +331,28 @@ const GACHA_HISTORY_COPY = Object.freeze({
   emptyTitle: "\u8fd8\u6ca1\u6709\u62bd\u5230\u793c\u7269",
   emptyHint: "\u5148\u53bb\u626d\u4e00\u53d1\uff0c\u8fd9\u91cc\u5c31\u4f1a\u6536\u85cf\u5979\u7684\u6240\u6709\u5c0f\u60ca\u559c\u3002"
 });
+const BIRTHDAY_CELEBRATION_COLORS = ["#ff8fab", "#ffd166", "#c4a7ff", "#7dd3fc", "#b8f2e6", "#fff1a8"];
 
 const state = loadState();
 let gachaMotion = null;
 let gachaState = buildGachaState();
 let gachaPhysics = null;
 let gachaResizeTimer = null;
+let birthdayCountdownTimer = null;
+let birthdayCelebrationBurstTimer = null;
+let birthdayCelebrationFallTimer = null;
+let birthdayCelebrationActive = false;
+let memoryVideoUnlocked = null;
 let toastTimer = null;
+let activeVideoPreviewTrigger = null;
 let resolveCapsuleOpen = null;
 const managedAudio = new Set();
 const gachaAudio = createGachaAudio();
+let backgroundMusicAudio = null;
+let backgroundMusicTrackIndex = 0;
+let backgroundMusicUnlockListener = null;
+let activePrizeModalRecord = null;
+let activePrizeModalPrize = null;
 
 bootstrap();
 
@@ -270,14 +363,185 @@ function bootstrap() {
   ensureRecordModal();
   initializeCapsuleMetadata();
   normalizeSoundToggleButton();
+  normalizeMusicToggleButton();
+  initializeBackgroundMusic();
   syncManagedAudioState();
   renderStaticContent();
   bindEvents();
   initializeGsap();
   renderApp();
+  startBirthdayCountdownTimer();
 
   if (state.activeView === "gacha") {
     queueMicrotask(() => playGachaEntrance(true));
+  }
+}
+
+function startBirthdayCountdownTimer() {
+  if (birthdayCountdownTimer) {
+    clearInterval(birthdayCountdownTimer);
+  }
+
+  birthdayCountdownTimer = window.setInterval(() => {
+    renderJourneyCard();
+    syncMemoryVideoAvailability();
+    syncBirthdayCelebration();
+    renderDrawButtonState();
+  }, 1000);
+}
+
+function syncMemoryVideoAvailability() {
+  const isUnlocked = getBirthdayCountdownParts().isComplete;
+
+  if (memoryVideoUnlocked === isUnlocked) {
+    return;
+  }
+
+  renderMemoryGrid();
+}
+
+function syncBirthdayCelebration() {
+  const shouldCelebrate = state.activeView === "letter" && getBirthdayCountdownParts().isComplete;
+
+  if (shouldCelebrate === birthdayCelebrationActive) {
+    return;
+  }
+
+  if (shouldCelebrate) {
+    startBirthdayCelebration();
+    return;
+  }
+
+  stopBirthdayCelebration();
+}
+
+function startBirthdayCelebration() {
+  if (!elements.particles) {
+    return;
+  }
+
+  birthdayCelebrationActive = true;
+  document.body.classList.add("is-birthday-celebration");
+  launchBirthdayFirework();
+  spawnBirthdayConfettiWave(8);
+
+  if (birthdayCelebrationBurstTimer) {
+    clearInterval(birthdayCelebrationBurstTimer);
+  }
+
+  if (birthdayCelebrationFallTimer) {
+    clearInterval(birthdayCelebrationFallTimer);
+  }
+
+  birthdayCelebrationBurstTimer = window.setInterval(() => {
+    if (document.hidden) {
+      return;
+    }
+
+    launchBirthdayFirework();
+  }, 900);
+
+  birthdayCelebrationFallTimer = window.setInterval(() => {
+    if (document.hidden) {
+      return;
+    }
+
+    spawnBirthdayConfettiWave(Math.round(randomBetween(1, 3)));
+  }, 240);
+}
+
+function stopBirthdayCelebration() {
+  birthdayCelebrationActive = false;
+  document.body.classList.remove("is-birthday-celebration");
+
+  if (birthdayCelebrationBurstTimer) {
+    clearInterval(birthdayCelebrationBurstTimer);
+    birthdayCelebrationBurstTimer = null;
+  }
+
+  if (birthdayCelebrationFallTimer) {
+    clearInterval(birthdayCelebrationFallTimer);
+    birthdayCelebrationFallTimer = null;
+  }
+
+  clearBirthdayCelebrationParticles();
+}
+
+function clearBirthdayCelebrationParticles() {
+  if (!elements.particles) {
+    return;
+  }
+
+  elements.particles
+    .querySelectorAll(".celebration-spark, .celebration-confetti, .celebration-ring")
+    .forEach((particle) => particle.remove());
+}
+
+function pickBirthdayCelebrationColor() {
+  return BIRTHDAY_CELEBRATION_COLORS[Math.floor(Math.random() * BIRTHDAY_CELEBRATION_COLORS.length)];
+}
+
+function launchBirthdayFirework() {
+  if (!birthdayCelebrationActive || !elements.particles) {
+    return;
+  }
+
+  const originX = randomBetween(window.innerWidth * 0.12, window.innerWidth * 0.88);
+  const originY = randomBetween(window.innerHeight * 0.16, window.innerHeight * 0.42);
+  const ringColor = pickBirthdayCelebrationColor();
+  const ring = document.createElement("span");
+  ring.className = "celebration-ring";
+  ring.style.left = `${originX}px`;
+  ring.style.top = `${originY}px`;
+  ring.style.setProperty("--celebration-color", ringColor);
+  elements.particles.appendChild(ring);
+  window.setTimeout(() => ring.remove(), 1100);
+
+  const sparkCount = Math.round(randomBetween(18, 24));
+
+  for (let index = 0; index < sparkCount; index += 1) {
+    const spark = document.createElement("span");
+    const color = pickBirthdayCelebrationColor();
+    const angle = (Math.PI * 2 * index) / sparkCount + randomBetween(-0.18, 0.18);
+    const distance = randomBetween(72, 182);
+    const lift = randomBetween(20, 86);
+
+    spark.className = "celebration-spark";
+    spark.style.left = `${originX}px`;
+    spark.style.top = `${originY}px`;
+    spark.style.setProperty("--celebration-color", color);
+    spark.style.setProperty("--spark-x", `${Math.cos(angle) * distance}px`);
+    spark.style.setProperty("--spark-y", `${Math.sin(angle) * distance - lift}px`);
+    spark.style.setProperty("--spark-fall", `${randomBetween(92, 200)}px`);
+    spark.style.setProperty("--spark-rotate", `${randomBetween(-220, 220)}deg`);
+    spark.style.setProperty("--spark-duration", `${Math.round(randomBetween(1500, 2300))}ms`);
+    elements.particles.appendChild(spark);
+    window.setTimeout(() => spark.remove(), 2400);
+  }
+}
+
+function spawnBirthdayConfettiWave(count) {
+  if (!birthdayCelebrationActive || !elements.particles) {
+    return;
+  }
+
+  for (let index = 0; index < count; index += 1) {
+    const confetti = document.createElement("span");
+    const color = pickBirthdayCelebrationColor();
+    const size = randomBetween(10, 18);
+    const duration = Math.round(randomBetween(5400, 8600));
+
+    confetti.className = "celebration-confetti";
+    confetti.style.left = `${randomBetween(-10, window.innerWidth + 10)}px`;
+    confetti.style.top = `${randomBetween(-30, -8)}px`;
+    confetti.style.setProperty("--celebration-color", color);
+    confetti.style.setProperty("--confetti-size", `${size}px`);
+    confetti.style.setProperty("--confetti-drift", `${randomBetween(-110, 110)}px`);
+    confetti.style.setProperty("--confetti-rotate", `${randomBetween(180, 720)}deg`);
+    confetti.style.setProperty("--fall-duration", `${duration}ms`);
+    confetti.style.opacity = `${randomBetween(0.72, 1)}`;
+    elements.particles.appendChild(confetti);
+    window.setTimeout(() => confetti.remove(), duration + 180);
   }
 }
 
@@ -403,6 +667,170 @@ function normalizeSoundToggleButton() {
   elements.soundToggleIcon = icon;
 }
 
+function getBackgroundMusicTracks() {
+  const tracks = SITE_CONFIG.backgroundMusic?.tracks;
+
+  if (!Array.isArray(tracks)) {
+    return [];
+  }
+
+  return tracks
+    .map((track) => (typeof track === "string" ? track : track?.src))
+    .filter((track) => typeof track === "string" && track.trim());
+}
+
+function getBackgroundMusicVolume() {
+  const configuredVolume = Number(SITE_CONFIG.backgroundMusic?.volume);
+
+  if (!Number.isFinite(configuredVolume)) {
+    return 0.42;
+  }
+
+  return Math.min(1, Math.max(0, configuredVolume));
+}
+
+function getBackgroundMusicTrackSrc(index = 0) {
+  const tracks = getBackgroundMusicTracks();
+
+  if (!tracks.length) {
+    return "";
+  }
+
+  const safeIndex = ((index % tracks.length) + tracks.length) % tracks.length;
+  return new URL(tracks[safeIndex], window.location.href).href;
+}
+
+function normalizeMusicToggleButton() {
+  if (!getBackgroundMusicTracks().length) {
+    elements.musicToggleButton?.remove();
+    elements.musicToggleButton = null;
+    elements.musicToggleIcon = null;
+    return;
+  }
+
+  const mountTarget = document.querySelector(".app-shell") || document.body;
+  const button = document.createElement("button");
+  button.className = "icon-button music-toggle-fab";
+  button.id = "music-toggle-button";
+  button.type = "button";
+  button.setAttribute("role", "switch");
+  button.setAttribute("aria-checked", "true");
+  button.setAttribute("aria-label", MUSIC_UI_COPY.pauseLabel);
+  button.title = MUSIC_UI_COPY.pauseLabel;
+
+  const icon = document.createElement("span");
+  icon.className = "material-symbols-outlined filled";
+  icon.id = "music-toggle-icon";
+  icon.textContent = "pause_circle";
+
+  button.append(icon);
+  elements.musicToggleButton?.remove();
+  mountTarget.append(button);
+  elements.musicToggleButton = button;
+  elements.musicToggleIcon = icon;
+}
+
+function initializeBackgroundMusic() {
+  if (backgroundMusicAudio || typeof Audio !== "function") {
+    return;
+  }
+
+  const initialTrack = getBackgroundMusicTrackSrc(backgroundMusicTrackIndex);
+
+  if (!initialTrack) {
+    return;
+  }
+
+  try {
+    const audio = new Audio(initialTrack);
+    audio.preload = "auto";
+    audio.volume = getBackgroundMusicVolume();
+    audio.loop = false;
+    audio.playsInline = true;
+    audio.setAttribute("playsinline", "");
+    audio.addEventListener("ended", handleBackgroundMusicEnded);
+    audio.addEventListener("error", handleBackgroundMusicError);
+    backgroundMusicAudio = audio;
+    audio.load();
+    syncBackgroundMusicPlayback();
+  } catch (error) {
+    backgroundMusicAudio = null;
+  }
+}
+
+function handleBackgroundMusicEnded() {
+  advanceBackgroundMusicTrack();
+}
+
+function handleBackgroundMusicError() {
+  if (getBackgroundMusicTracks().length < 2) {
+    return;
+  }
+
+  advanceBackgroundMusicTrack();
+}
+
+function loadBackgroundMusicTrack(index) {
+  if (!backgroundMusicAudio) {
+    return false;
+  }
+
+  const src = getBackgroundMusicTrackSrc(index);
+
+  if (!src) {
+    return false;
+  }
+
+  backgroundMusicTrackIndex = index;
+  backgroundMusicAudio.pause();
+  backgroundMusicAudio.src = src;
+  backgroundMusicAudio.load();
+  return true;
+}
+
+function advanceBackgroundMusicTrack() {
+  const tracks = getBackgroundMusicTracks();
+
+  if (!tracks.length || !backgroundMusicAudio) {
+    return;
+  }
+
+  const nextTrackIndex = (backgroundMusicTrackIndex + 1) % tracks.length;
+
+  if (!loadBackgroundMusicTrack(nextTrackIndex)) {
+    return;
+  }
+
+  syncBackgroundMusicPlayback();
+}
+
+function isVideoPreviewOpen() {
+  return Boolean(elements.videoPreviewModal && !elements.videoPreviewModal.hidden);
+}
+
+function clearBackgroundMusicUnlockAttempt() {
+  if (!backgroundMusicUnlockListener) {
+    return;
+  }
+
+  window.removeEventListener("pointerdown", backgroundMusicUnlockListener, true);
+  window.removeEventListener("keydown", backgroundMusicUnlockListener, true);
+  backgroundMusicUnlockListener = null;
+}
+
+function queueBackgroundMusicUnlockAttempt() {
+  if (backgroundMusicUnlockListener || !backgroundMusicAudio) {
+    return;
+  }
+
+  backgroundMusicUnlockListener = () => {
+    attemptBackgroundMusicPlay();
+  };
+
+  window.addEventListener("pointerdown", backgroundMusicUnlockListener, true);
+  window.addEventListener("keydown", backgroundMusicUnlockListener, true);
+}
+
 function registerManagedAudio(audio) {
   if (!audio) {
     return null;
@@ -468,6 +896,22 @@ function renderAudioToggle() {
   elements.soundToggleIcon.classList.toggle("filled", enabled);
 }
 
+function renderMusicToggle() {
+  if (!elements.musicToggleButton || !elements.musicToggleIcon) {
+    return;
+  }
+
+  const enabled = state.musicEnabled;
+  const label = enabled ? MUSIC_UI_COPY.pauseLabel : MUSIC_UI_COPY.playLabel;
+
+  elements.musicToggleButton.setAttribute("aria-checked", String(enabled));
+  elements.musicToggleButton.setAttribute("aria-label", label);
+  elements.musicToggleButton.title = label;
+  elements.musicToggleButton.classList.toggle("is-muted", !enabled);
+  elements.musicToggleIcon.textContent = enabled ? "pause_circle" : "play_circle";
+  elements.musicToggleIcon.classList.toggle("filled", enabled);
+}
+
 function setAudioEnabled(enabled, options = {}) {
   const { silent = false } = options;
 
@@ -489,6 +933,79 @@ function setAudioEnabled(enabled, options = {}) {
 
 function handleAudioToggle() {
   setAudioEnabled(!state.audioEnabled);
+}
+
+function attemptBackgroundMusicPlay() {
+  if (!backgroundMusicAudio || !state.musicEnabled || isVideoPreviewOpen()) {
+    return;
+  }
+
+  backgroundMusicAudio.volume = getBackgroundMusicVolume();
+
+  try {
+    const playback = backgroundMusicAudio.play();
+
+    if (!playback?.then) {
+      clearBackgroundMusicUnlockAttempt();
+      return;
+    }
+
+    playback
+      .then(() => {
+        clearBackgroundMusicUnlockAttempt();
+      })
+      .catch(() => {
+        queueBackgroundMusicUnlockAttempt();
+      });
+  } catch (error) {
+    queueBackgroundMusicUnlockAttempt();
+  }
+}
+
+function syncBackgroundMusicPlayback() {
+  if (!backgroundMusicAudio) {
+    return;
+  }
+
+  if (!state.musicEnabled || isVideoPreviewOpen()) {
+    backgroundMusicAudio.pause();
+
+    if (!state.musicEnabled) {
+      clearBackgroundMusicUnlockAttempt();
+    }
+
+    return;
+  }
+
+  attemptBackgroundMusicPlay();
+}
+
+function setMusicEnabled(enabled, options = {}) {
+  const { silent = false } = options;
+
+  if (state.musicEnabled === enabled) {
+    renderMusicToggle();
+    syncBackgroundMusicPlayback();
+    return;
+  }
+
+  state.musicEnabled = enabled;
+
+  if (enabled && !backgroundMusicAudio) {
+    initializeBackgroundMusic();
+  }
+
+  renderMusicToggle();
+  saveState();
+  syncBackgroundMusicPlayback();
+
+  if (!silent) {
+    showToast(enabled ? MUSIC_UI_COPY.playingToast : MUSIC_UI_COPY.pausedToast);
+  }
+}
+
+function handleMusicToggle() {
+  setMusicEnabled(!state.musicEnabled);
 }
 
 function playGachaSound(key) {
@@ -523,12 +1040,15 @@ function initializeCapsuleMetadata() {
 }
 
 function restoreGachaCoinsOnce() {
-  if (state.gachaCoins >= DEFAULT_GACHA_COINS || state.temporaryGachaRestoreApplied) {
+  const normalizedSequenceIndex = normalizeGachaSequenceIndex(state.gachaSequenceIndex);
+  const normalizedCoins = getRemainingGachaCoins(normalizedSequenceIndex);
+
+  if (state.gachaSequenceIndex === normalizedSequenceIndex && state.gachaCoins === normalizedCoins) {
     return;
   }
 
-  state.gachaCoins = DEFAULT_GACHA_COINS;
-  state.temporaryGachaRestoreApplied = true;
+  state.gachaSequenceIndex = normalizedSequenceIndex;
+  state.gachaCoins = normalizedCoins;
   saveState();
 }
 
@@ -563,12 +1083,14 @@ function bindEvents() {
     showToast("爱心已经偷偷飘到她身边啦。");
   });
 
+  elements.memoryGrid?.addEventListener("click", handleMemoryVideoClick);
   elements.soundToggleButton?.addEventListener("click", handleAudioToggle);
+  elements.musicToggleButton?.addEventListener("click", handleMusicToggle);
 
   elements.cakeButton.addEventListener("click", () => {
-    const countdown = getBirthdayCountdown();
-    if (countdown > 0) {
-      showToast(`距离 ${formatBirthdayLabel()} 还有 ${countdown} 天，惊喜正在发酵中。`);
+    const countdown = getBirthdayCountdownParts();
+    if (!countdown.isComplete) {
+      showToast(`距离 ${formatBirthdayLabel()} 还有 ${formatCountdownSummary(countdown)}，惊喜正在发酵中。`);
       return;
     }
 
@@ -589,17 +1111,19 @@ function bindEvents() {
   elements.giftLaunch.addEventListener("click", openGiftModal);
   elements.recordLaunch?.addEventListener("click", openRecordModal);
   elements.revealCapsule.addEventListener("click", handleRevealCapsule);
-  elements.checkinButton.addEventListener("click", handleCheckIn);
-  elements.prevMonth.addEventListener("click", () => changeMonth(-1));
-  elements.nextMonth.addEventListener("click", () => changeMonth(1));
+  elements.checkinButton?.addEventListener("click", handleCheckIn);
+  elements.prevMonth?.addEventListener("click", () => changeMonth(-1));
+  elements.nextMonth?.addEventListener("click", () => changeMonth(1));
   elements.giftModalClose.addEventListener("click", () => closeGiftModal());
   elements.giftModalBackdrop.addEventListener("click", () => closeGiftModal());
   elements.recordModalClose?.addEventListener("click", () => closeRecordModal());
   elements.recordModalBackdrop?.addEventListener("click", () => closeRecordModal());
-  elements.modalClose.addEventListener("click", closeModal);
+  elements.modalRevealButton?.addEventListener("click", handleRevealMysteryGift);
+  elements.modalClose.addEventListener("click", handlePrizeModalPrimaryAction);
   elements.modalBackdrop.addEventListener("click", closeModal);
   elements.imagePreviewClose?.addEventListener("click", () => closeImagePreview());
   elements.imagePreviewBackdrop?.addEventListener("click", () => closeImagePreview());
+  elements.videoPreviewBackdrop?.addEventListener("click", closeVideoPreview);
   document.addEventListener("click", handlePrizeImagePreviewClick);
   window.addEventListener("resize", handleGachaViewportResize);
 
@@ -613,6 +1137,11 @@ function bindEvents() {
     }
 
     if (event.key === "Escape") {
+      if (!elements.videoPreviewModal?.hidden) {
+        closeVideoPreview();
+        return;
+      }
+
       if (!elements.imagePreviewModal?.hidden) {
         closeImagePreview();
         return;
@@ -1014,12 +1543,14 @@ function degreesToRadians(degrees) {
 
 function renderApp() {
   renderAudioToggle();
+  renderMusicToggle();
   renderActiveView();
   renderJourneyCard();
   renderGachaPanel();
   renderDailyPanel();
   renderPocketList();
   renderRewardStats();
+  syncBirthdayCelebration();
 }
 
 function renderActiveView() {
@@ -1030,30 +1561,84 @@ function renderActiveView() {
   elements.tabButtons.forEach((button) => {
     button.classList.toggle("is-active", button.dataset.view === state.activeView);
   });
+
+  syncBirthdayCelebration();
 }
 
 function renderJourneyCard() {
-  const countdown = getBirthdayCountdown();
+  const countdown = getBirthdayCountdownParts();
   const togetherDays = getTogetherDays();
   const birthdayLabel = formatBirthdayLabel();
 
-  if (countdown > 0) {
-    elements.journeyChip.textContent = "生日倒计时";
-    elements.journeyNumber.textContent = `${countdown} 天`;
-    elements.journeyCopy.textContent = `距离 ${birthdayLabel} 还有 ${countdown} 天，我把所有小心思都藏进这个网页里。`;
+  elements.journeyChip.textContent = birthdayLabel;
+  elements.journeyNumber.classList.toggle("is-celebration", countdown.isComplete);
+
+  if (countdown.isComplete) {
+    elements.journeyNumber.innerHTML = `
+      <span class="hero-card__number-main hero-card__number-main--celebrate">生日快乐</span>
+    `;
   } else {
-    elements.journeyChip.textContent = "生日快乐";
-    elements.journeyNumber.textContent = "Today";
-    elements.journeyCopy.textContent = `今天就是 ${birthdayLabel}，希望你会一直记得这一份被认真准备过的偏爱。`;
+    elements.journeyNumber.innerHTML = `
+      <span class="hero-card__number-main">${countdown.days} 天</span>
+      <span class="hero-card__number-sub">${formatCountdownClock(countdown)}</span>
+    `;
   }
+
+  elements.journeyCopy.textContent = "";
 
   elements.journeyMeta.innerHTML = `
     <span class="pill">已经一起走过 ${togetherDays} 天</span>
-    <span class="pill">已经送出 ${state.hugsSent} 个抱抱</span>
   `;
 }
 
 function renderMemoryGrid() {
+  if (!elements.memoryGrid) {
+    return;
+  }
+
+  const memoryVideo = SITE_CONFIG.memoryVideo;
+
+  if (memoryVideo?.src) {
+    const isUnlocked = getBirthdayCountdownParts().isComplete;
+    const buttonLabel = escapeHtmlAttribute(memoryVideo.buttonLabel || `${memoryVideo.title || "Memory Video"} video`);
+    const src = escapeHtmlAttribute(memoryVideo.src);
+    const lockedCover = escapeHtmlAttribute(memoryVideo.lockedCover || "");
+    const unlockedCover = escapeHtmlAttribute(memoryVideo.unlockedCover || "");
+
+    memoryVideoUnlocked = isUnlocked;
+
+    if (!isUnlocked && lockedCover) {
+      elements.memoryGrid.innerHTML = `
+        <article class="memory-video-card memory-video-card--locked" aria-hidden="true">
+          <img class="memory-video-card__media memory-video-card__image" src="${lockedCover}" alt="" loading="eager" />
+        </article>
+      `;
+      return;
+    }
+
+    const previewMedia = unlockedCover
+      ? `<img class="memory-video-card__media memory-video-card__image" src="${unlockedCover}" alt="" loading="eager" />`
+      : `<video class="memory-video-card__media" src="${src}" preload="metadata" muted playsinline aria-hidden="true"></video>`;
+
+    elements.memoryGrid.innerHTML = `
+      <article class="memory-video-card">
+        ${previewMedia}
+        <button
+          class="memory-video-card__trigger"
+          type="button"
+          data-memory-video-trigger
+          data-video-src="${src}"
+          aria-label="${buttonLabel}"
+          aria-haspopup="dialog"
+        >
+          <span class="memory-video-card__scrim" aria-hidden="true"></span>
+          <span class="memory-video-card__play material-symbols-outlined filled" aria-hidden="true">play_circle</span>
+        </button>
+      </article>
+    `;
+    return;
+  }
+
   elements.memoryGrid.innerHTML = SITE_CONFIG.memories
     .map((memory, index) => {
       const classes = index === 0 ? "memory-card memory-card--large" : "memory-card";
@@ -1196,8 +1781,26 @@ function updatePrizePreviewTrigger(container, prize, options = {}) {
   container.setAttribute("aria-label", `查看${title}原图`);
 }
 
+function getPrizeCatalog() {
+  return Array.isArray(SITE_CONFIG.prizes) ? SITE_CONFIG.prizes : [];
+}
+
+function getPrizePool() {
+  const catalog = getPrizeCatalog();
+  const configuredIds = SITE_CONFIG.prizePoolIds;
+
+  if (!Array.isArray(configuredIds) || !configuredIds.length) {
+    return catalog;
+  }
+
+  const prizeMap = new Map(catalog.map((prize) => [prize.id, prize]));
+  const pool = configuredIds.map((prizeId) => prizeMap.get(prizeId)).filter(Boolean);
+  return pool.length ? pool : catalog;
+}
+
 function getPrizeRarity(prize) {
-  const weights = SITE_CONFIG.prizes.map((item) => item.weight);
+  const prizePool = getPrizePool();
+  const weights = prizePool.map((item) => item.weight);
   const minWeight = Math.min(...weights);
   const maxWeight = Math.max(...weights);
   const range = Math.max(1, maxWeight - minWeight);
@@ -1209,9 +1812,9 @@ function getPrizeRarity(prize) {
     4: "珍藏款",
     5: "超稀有"
   };
-  const totalWeight = SITE_CONFIG.prizes.reduce((sum, item) => sum + item.weight, 0);
+  const totalWeight = prizePool.reduce((sum, item) => sum + item.weight, 0);
   const chance = totalWeight > 0 ? (prize.weight / totalWeight) * 100 : 0;
-  const chanceLabel = chance < 10 ? `${chance.toFixed(1)}%` : `${Math.round(chance)}%`;
+  const chanceLabel = chance < 10 && !Number.isInteger(chance) ? `${chance.toFixed(1)}%` : `${Math.round(chance)}%`;
 
   return {
     score,
@@ -1237,7 +1840,8 @@ function buildPrizeRarityMarkup(prize) {
 }
 
 function renderGiftGrid() {
-  const giftMarkup = SITE_CONFIG.prizes
+  const prizePool = getPrizePool();
+  const giftMarkup = prizePool
     .map((prize) => {
       const wideClass = prize.featured ? " gift-item--wide" : "";
       return `
@@ -1249,7 +1853,7 @@ function renderGiftGrid() {
       `;
     })
     .join("");
-  const giftModalMarkup = SITE_CONFIG.prizes
+  const giftModalMarkup = prizePool
     .map((prize) => {
       const wideClass = prize.featured ? " gift-item--wide" : "";
       const previewAttrs = buildPrizePreviewAttrs(prize, { alt: prize.name });
@@ -1294,6 +1898,7 @@ function renderDrawButtonState() {
   let label = "抽一发";
   let icon = "casino";
   let machineLabel = "开始扭蛋";
+  const isCountdownLocked = isGachaCountdownLocked();
 
   if (gachaState.phase === GACHA_PHASE.DRAWING) {
     label = "扭蛋掉落中";
@@ -1307,13 +1912,17 @@ function renderDrawButtonState() {
     label = "正在打开";
     icon = "auto_awesome";
     machineLabel = "打开中";
+  } else if (isCountdownLocked) {
+    label = "生日当天开启";
+    icon = "lock_clock";
+    machineLabel = "生日当天开启";
   } else if (state.gachaCoins <= 0) {
-    label = "先去签到攒币";
-    icon = "calendar_month";
-    machineLabel = "先去签到";
+    label = "先恢复次数";
+    icon = "refresh";
+    machineLabel = "恢复次数";
   }
 
-  const isLocked = gachaState.phase !== GACHA_PHASE.IDLE || state.gachaCoins <= 0;
+  const isLocked = gachaState.phase !== GACHA_PHASE.IDLE || state.gachaCoins <= 0 || isCountdownLocked;
   const isBusy = gachaState.phase === GACHA_PHASE.DRAWING || gachaState.phase === GACHA_PHASE.OPENING;
 
   elements.drawButton.hidden = true;
@@ -1388,7 +1997,7 @@ function renderHistoryList() {
     elements.historyList.innerHTML = `
       <div class="empty-state">
         第一份惊喜还没有被抽出来。<br />
-        先去签到攒扭蛋币，再回来抽一发吧。
+        先点恢复次数，再回来抽一发吧。
       </div>
     `;
     return;
@@ -1397,7 +2006,7 @@ function renderHistoryList() {
   elements.historyList.innerHTML = state.drawHistory
     .slice(0, 4)
     .map((record) => {
-      const prize = getPrizeById(record.prizeId);
+      const prize = getPrizeForRecord(record);
       return `
         <article class="history-item">
           ${buildPrizeVisualWrapper(prize, "history-item__icon prize-media", { alt: prize.name, loading: "lazy" })}
@@ -1424,7 +2033,7 @@ function buildHistoryListMarkup(records) {
 
   return records
     .map((record) => {
-      const prize = getPrizeById(record.prizeId);
+      const prize = getPrizeForRecord(record);
       return `
         <article class="history-item">
           ${buildPrizeVisualWrapper(prize, "history-item__icon prize-media", { alt: prize.name, loading: "lazy" })}
@@ -1451,7 +2060,7 @@ function buildHistoryListMarkup(records) {
 
   return records
     .map((record) => {
-      const prize = getPrizeById(record.prizeId);
+      const prize = getPrizeForRecord(record);
       return `
         <article class="history-item">
           <div class="history-item__main">
@@ -1480,7 +2089,7 @@ function renderPocketList() {
 
   elements.pocketList.innerHTML = latestDraws
     .map((record) => {
-      const prize = getPrizeById(record.prizeId);
+      const prize = getPrizeForRecord(record);
       return `
         <article class="pocket-item">
           ${buildPrizeVisualWrapper(prize, "pocket-item__icon prize-media", { alt: prize.name, loading: "lazy" })}
@@ -1495,6 +2104,16 @@ function renderPocketList() {
 }
 
 function renderDailyPanel() {
+  if (
+    !elements.streakNumber ||
+    !elements.monthProgressText ||
+    !elements.monthProgressBar ||
+    !elements.calendarTitle ||
+    !elements.calendarGrid
+  ) {
+    return;
+  }
+
   const streak = getCurrentStreak();
   const monthInfo = getMonthProgress(state.calendarMonth);
 
@@ -1507,6 +2126,10 @@ function renderDailyPanel() {
 }
 
 function renderCalendarGrid(monthKey) {
+  if (!elements.calendarGrid) {
+    return;
+  }
+
   const viewDate = parseMonthKey(monthKey);
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
@@ -1560,6 +2183,10 @@ function renderCalendarGrid(monthKey) {
 }
 
 function updateCheckInButton() {
+  if (!elements.checkinButton) {
+    return;
+  }
+
   const today = new Date();
   const currentMonth = monthString(today);
   const checkedInToday = state.checkIns.includes(formatDateKey(today));
@@ -1577,7 +2204,7 @@ function updateCheckInButton() {
     elements.checkinButton.disabled = true;
     elements.checkinButton.innerHTML = `
       <span class="material-symbols-outlined filled">favorite</span>
-      今天已经签到啦
+      今天已经领取啦
     `;
     return;
   }
@@ -1585,25 +2212,35 @@ function updateCheckInButton() {
   elements.checkinButton.disabled = false;
   elements.checkinButton.innerHTML = `
     <span class="material-symbols-outlined">calendar_month</span>
-    今天也要签到
+    领取今日奖励
   `;
 }
 
 function renderRewardStats() {
-  elements.loveNotesCount.textContent = state.loveNotes;
-  elements.rewardCoinsCount.textContent = state.gachaCoins;
-  elements.surpriseCount.textContent = state.drawHistory.length;
+  if (elements.loveNotesCount) {
+    elements.loveNotesCount.textContent = state.loveNotes;
+  }
+
+  if (elements.rewardCoinsCount) {
+    elements.rewardCoinsCount.textContent = state.gachaCoins;
+  }
+
+  if (elements.surpriseCount) {
+    elements.surpriseCount.textContent = state.drawHistory.length;
+  }
 }
 
 function switchView(view) {
+  const nextView = AVAILABLE_VIEWS.includes(view) ? view : "letter";
+
   closeGiftModal(true);
   closeRecordModal(true);
-  state.activeView = view;
-  updateLocationHash(view);
+  state.activeView = nextView;
+  updateLocationHash(nextView);
   saveState();
   renderActiveView();
 
-  if (view === "gacha") {
+  if (nextView === "gacha") {
     initializeGachaPhysics(true);
     playGachaEntrance(true);
     return;
@@ -1626,9 +2263,15 @@ async function handleDraw() {
     return;
   }
 
+  if (isGachaCountdownLocked()) {
+    const countdown = getBirthdayCountdownParts();
+    showToast(`距离 ${formatBirthdayLabel()} 还有 ${formatCountdownSummary(countdown)}，生日当天才能开始扭蛋。`);
+    return;
+  }
+
   if (state.gachaCoins <= 0) {
-    showToast("扭蛋币不够啦，先去签到攒一点再来。");
-    switchView("daily");
+    showToast("扭蛋次数用完了，点一下恢复次数就能继续抽啦。");
+    elements.restoreGachaButton?.focus({ preventScroll: true });
     return;
   }
 
@@ -1686,7 +2329,8 @@ function handleRestoreGachaCoins() {
   }
 
   const previousCoins = state.gachaCoins;
-  state.gachaCoins = DEFAULT_GACHA_COINS;
+  state.gachaSequenceIndex = 0;
+  state.gachaCoins = getRemainingGachaCoins();
   saveState();
 
   renderGachaPanel({
@@ -1694,16 +2338,18 @@ function handleRestoreGachaCoins() {
     statusText: "扭蛋次数已恢复，继续抽吧。"
   });
   renderRewardStats();
-  showToast(`已恢复到 ${DEFAULT_GACHA_COINS} 次扭蛋机会。`);
+  showToast(`已恢复到 ${DEFAULT_GACHA_COINS} 次扭蛋机会，并从第 1 发重新开始。`);
 }
 
 function finishDraw(prize, previousCoins) {
   resolveCapsuleOpen = null;
-  state.gachaCoins = Math.max(0, state.gachaCoins - 1);
-  state.drawHistory.unshift({
+  const drawRecord = {
     prizeId: prize.id,
     drawnAt: new Date().toISOString()
-  });
+  };
+  state.drawHistory.unshift(drawRecord);
+  state.gachaSequenceIndex = normalizeGachaSequenceIndex(state.gachaSequenceIndex + 1);
+  state.gachaCoins = getRemainingGachaCoins();
   saveState();
 
   gachaState = buildGachaState();
@@ -1716,7 +2362,7 @@ function finishDraw(prize, previousCoins) {
   });
   renderPocketList();
   renderRewardStats();
-  showPrizeModal(prize);
+  showPrizeModal(prize, drawRecord);
 }
 
 function handleCheckIn() {
@@ -1730,7 +2376,7 @@ function handleCheckIn() {
   state.checkIns.push(todayKey);
   state.checkIns = unique(state.checkIns).sort();
   state.loveNotes += 1;
-  state.gachaCoins += 1;
+  state.gachaCoins = getRemainingGachaCoins();
   saveState();
 
   renderJourneyCard();
@@ -1738,7 +2384,7 @@ function handleCheckIn() {
   renderGachaPanel();
   renderRewardStats();
   burstHearts(elements.checkinButton, 10);
-  showToast("签到成功，收下 1 张 Love Note 和 1 枚扭蛋币。");
+  showToast("今日奖励已领取，收下 1 张 Love Note。");
 }
 
 function changeMonth(direction) {
@@ -2605,12 +3251,45 @@ function closeRecordModal(immediate = false) {
     .to(elements.recordModalBackdrop, { autoAlpha: 0, duration: 0.18 }, 0);
 }
 
-function showPrizeModal(prize) {
+function renderPrizeModalContent(prize, options = {}) {
+  const title = options.title ?? `抽到了 ${prize.name}`;
+  const description = options.description ?? prize.description;
+
+  setPrizeVisual(elements.modalIcon, prize, { alt: prize.name });
+  elements.modalTitle.textContent = title;
+  elements.modalCopy.textContent = description;
+}
+
+function syncPrizeModalActions(prize, record = null) {
+  const canReveal = prize?.id === "mystery-grand-gift" && record && !record.revealedPrizeId;
+
+  if (elements.modalRevealButton) {
+    elements.modalRevealButton.hidden = true;
+    elements.modalRevealButton.disabled = true;
+  }
+
+  elements.modalClose.textContent = canReveal ? "拆开神秘大礼" : "收进礼物口袋";
+}
+
+function resetPrizeModalState() {
+  activePrizeModalRecord = null;
+  activePrizeModalPrize = null;
+
+  if (elements.modalRevealButton) {
+    elements.modalRevealButton.hidden = true;
+    elements.modalRevealButton.disabled = true;
+  }
+
+  elements.modalClose.textContent = "收进礼物口袋";
+}
+
+function showPrizeModal(prize, record = null) {
   closeGiftModal(true);
   closeRecordModal(true);
-  setPrizeVisual(elements.modalIcon, prize, { alt: prize.name });
-  elements.modalTitle.textContent = `抽到了 ${prize.name}`;
-  elements.modalCopy.textContent = prize.description;
+  activePrizeModalRecord = record;
+  activePrizeModalPrize = prize;
+  renderPrizeModalContent(prize);
+  syncPrizeModalActions(prize, record);
   elements.modal.hidden = false;
 
   if (!GSAP || !gachaMotion || gachaMotion.reduceMotion) {
@@ -2626,13 +3305,30 @@ function showPrizeModal(prize) {
     .to(elements.modalDialog, { autoAlpha: 1, y: 0, scale: 1, duration: 0.42, ease: "back.out(1.35)" }, 0.04);
 }
 
+function handlePrizeModalPrimaryAction() {
+  const canReveal = Boolean(
+    activePrizeModalRecord &&
+      activePrizeModalRecord.prizeId === "mystery-grand-gift" &&
+      !activePrizeModalRecord.revealedPrizeId
+  );
+
+  if (canReveal) {
+    handleRevealMysteryGift();
+    return;
+  }
+
+  closeModal();
+}
+
 function closeModal() {
   if (elements.modal.hidden) {
+    resetPrizeModalState();
     return;
   }
 
   if (!GSAP || !gachaMotion || gachaMotion.reduceMotion) {
     elements.modal.hidden = true;
+    resetPrizeModalState();
     return;
   }
 
@@ -2641,12 +3337,38 @@ function closeModal() {
     defaults: { ease: "power2.inOut" },
     onComplete: () => {
       elements.modal.hidden = true;
+      resetPrizeModalState();
     }
   });
 
   gachaMotion.modalTl
     .to(elements.modalDialog, { autoAlpha: 0, y: 16, scale: 0.94, duration: 0.18 }, 0)
     .to(elements.modalBackdrop, { autoAlpha: 0, duration: 0.18 }, 0);
+}
+
+function handleRevealMysteryGift() {
+  if (!activePrizeModalRecord || activePrizeModalRecord.prizeId !== "mystery-grand-gift" || activePrizeModalRecord.revealedPrizeId) {
+    return;
+  }
+
+  const revealedPrize = getPrizeById("dji-pocket-4");
+  if (!revealedPrize) {
+    return;
+  }
+
+  activePrizeModalRecord.revealedPrizeId = revealedPrize.id;
+  activePrizeModalRecord.revealedAt = new Date().toISOString();
+  activePrizeModalPrize = revealedPrize;
+  saveState();
+
+  renderPrizeModalContent(revealedPrize, {
+    title: "拆开啦，是大疆 Pocket 4"
+  });
+  syncPrizeModalActions(revealedPrize, activePrizeModalRecord);
+  renderHistoryList();
+  renderPocketList();
+  renderRewardStats();
+  showToast("神秘大礼已经拆开，是大疆 Pocket 4。");
 }
 
 function getPrizeImagePreviewTrigger(target) {
@@ -2697,6 +3419,79 @@ function closeImagePreview() {
   elements.imagePreviewTitle.textContent = "";
 }
 
+function getMemoryVideoTrigger(target) {
+  if (!(target instanceof Element)) {
+    return null;
+  }
+
+  return target.closest("[data-memory-video-trigger]");
+}
+
+function handleMemoryVideoClick(event) {
+  const trigger = getMemoryVideoTrigger(event.target);
+
+  if (!trigger) {
+    return;
+  }
+
+  event.preventDefault();
+  openVideoPreviewFromTrigger(trigger);
+}
+
+function openVideoPreviewFromTrigger(trigger) {
+  activeVideoPreviewTrigger = trigger;
+
+  if (!getBirthdayCountdownParts().isComplete) {
+    return;
+  }
+
+  openVideoPreview(trigger.dataset.videoSrc);
+}
+
+function openVideoPreview(src) {
+  if (!src || !elements.videoPreviewModal || !elements.videoPreviewPlayer) {
+    return;
+  }
+
+  const unlockedCover = SITE_CONFIG.memoryVideo?.unlockedCover || "";
+  elements.videoPreviewPlayer.pause();
+
+  if (unlockedCover) {
+    elements.videoPreviewPlayer.poster = unlockedCover;
+  } else {
+    elements.videoPreviewPlayer.removeAttribute("poster");
+  }
+
+  elements.videoPreviewPlayer.src = src;
+  elements.videoPreviewPlayer.load();
+  elements.videoPreviewModal.hidden = false;
+  syncBackgroundMusicPlayback();
+  elements.videoPreviewDialog?.focus({ preventScroll: true });
+
+  const playback = elements.videoPreviewPlayer.play();
+  playback?.catch?.(() => {});
+}
+
+function closeVideoPreview() {
+  if (!elements.videoPreviewModal || elements.videoPreviewModal.hidden) {
+    return;
+  }
+
+  elements.videoPreviewPlayer?.pause();
+
+  if (elements.videoPreviewPlayer) {
+    elements.videoPreviewPlayer.removeAttribute("poster");
+    elements.videoPreviewPlayer.removeAttribute("src");
+    elements.videoPreviewPlayer.load();
+  }
+
+  elements.videoPreviewModal.hidden = true;
+  syncBackgroundMusicPlayback();
+
+  activeVideoPreviewTrigger?.focus({ preventScroll: true });
+  activeVideoPreviewTrigger = null;
+}
+
 function updateGachaStatus(text) {
   if (text) {
     elements.gachaStatus.textContent = text;
@@ -2723,7 +3518,7 @@ function updateGachaStatus(text) {
     return;
   }
 
-  elements.gachaStatus.textContent = "扭蛋币用完了，先去签到。";
+  elements.gachaStatus.textContent = "扭蛋次数用完了，先点恢复次数吧。";
 }
 
 function highlightPrizeCard(prizeId, options = {}) {
@@ -2850,17 +3645,8 @@ function burstSparkles(anchor, count) {
 }
 
 function pickPrize() {
-  const totalWeight = SITE_CONFIG.prizes.reduce((sum, prize) => sum + prize.weight, 0);
-  let target = Math.random() * totalWeight;
-
-  for (const prize of SITE_CONFIG.prizes) {
-    target -= prize.weight;
-    if (target <= 0) {
-      return prize;
-    }
-  }
-
-  return SITE_CONFIG.prizes[SITE_CONFIG.prizes.length - 1];
+  const prizeId = GACHA_FIXED_SEQUENCE[normalizeGachaSequenceIndex(state.gachaSequenceIndex)];
+  return getPrizeById(prizeId) || getPrizePool()[0] || getPrizeCatalog()[0] || null;
 }
 
 function buildGachaState() {
@@ -2889,7 +3675,7 @@ function getGachaLockedMessage() {
 }
 
 function pickCapsuleToneForPrize(prize) {
-  if (prize.id === "mystery" && Math.random() > 0.35) {
+  if ((prize.id === "mystery" || prize.id === "mystery-grand-gift") && Math.random() > 0.35) {
     return "pearl";
   }
 
@@ -2938,10 +3724,55 @@ function getCurrentStreak() {
   return streak;
 }
 
-function getBirthdayCountdown() {
-  const today = startOfDay(new Date());
-  const birthday = startOfDay(new Date(SITE_CONFIG.birthdayDate));
-  return Math.max(Math.ceil((birthday - today) / 86400000), 0);
+function getBirthdayTargetDate() {
+  const { year, month, day, hour = 0, minute = 0, second = 0 } = SITE_CONFIG.birthday;
+  return new Date(year, month - 1, day, hour, minute, second, 0);
+}
+
+function getBirthdayCountdownParts() {
+  const diff = getBirthdayTargetDate().getTime() - Date.now();
+
+  if (diff <= 0) {
+    return {
+      isComplete: true,
+      totalMs: 0,
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0
+    };
+  }
+
+  const totalSeconds = Math.ceil(diff / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return {
+    isComplete: false,
+    totalMs: diff,
+    days,
+    hours,
+    minutes,
+    seconds
+  };
+}
+
+function isGachaCountdownLocked() {
+  return !getBirthdayCountdownParts().isComplete;
+}
+
+function padCountdownUnit(value) {
+  return String(value).padStart(2, "0");
+}
+
+function formatCountdownClock(countdown) {
+  return `${padCountdownUnit(countdown.hours)}:${padCountdownUnit(countdown.minutes)}:${padCountdownUnit(countdown.seconds)}`;
+}
+
+function formatCountdownSummary(countdown) {
+  return `${countdown.days} 天 ${formatCountdownClock(countdown)}`;
 }
 
 function getTogetherDays() {
@@ -2951,12 +3782,44 @@ function getTogetherDays() {
 }
 
 function formatBirthdayLabel() {
-  const date = new Date(SITE_CONFIG.birthdayDate);
-  return `${date.getMonth() + 1} 月 ${date.getDate()} 日`;
+  const { month, day, hour = 0, minute = 0, second = 0 } = SITE_CONFIG.birthday;
+  const hasTime = hour !== 0 || minute !== 0 || second !== 0;
+  return hasTime
+    ? `${month} 月 ${day} 日 ${padCountdownUnit(hour)}:${padCountdownUnit(minute)}:${padCountdownUnit(second)}`
+    : `${month} 月 ${day} 日`;
 }
 
 function getPrizeById(prizeId) {
-  return SITE_CONFIG.prizes.find((prize) => prize.id === prizeId) || SITE_CONFIG.prizes[0];
+  return getPrizeCatalog().find((prize) => prize.id === prizeId) || getPrizePool()[0] || getPrizeCatalog()[0] || null;
+}
+
+function getPrizeForRecord(record) {
+  const resolvedPrizeId = record?.revealedPrizeId || record?.prizeId;
+  return getPrizeById(resolvedPrizeId);
+}
+
+function normalizeGachaSequenceIndex(value) {
+  const numericValue = Number.isFinite(value) ? Math.floor(value) : 0;
+  return Math.max(0, Math.min(GACHA_FIXED_SEQUENCE.length, numericValue));
+}
+
+function getRemainingGachaCoins(sequenceIndex = state.gachaSequenceIndex) {
+  return Math.max(0, DEFAULT_GACHA_COINS - normalizeGachaSequenceIndex(sequenceIndex));
+}
+
+function normalizeDrawHistory(records) {
+  if (!Array.isArray(records)) {
+    return [];
+  }
+
+  return records
+    .filter((record) => record && typeof record === "object" && typeof record.prizeId === "string")
+    .map((record) => ({
+      prizeId: record.prizeId,
+      drawnAt: typeof record.drawnAt === "string" ? record.drawnAt : new Date().toISOString(),
+      ...(typeof record.revealedPrizeId === "string" ? { revealedPrizeId: record.revealedPrizeId } : {}),
+      ...(typeof record.revealedAt === "string" ? { revealedAt: record.revealedAt } : {})
+    }));
 }
 
 function loadState() {
@@ -2969,11 +3832,17 @@ function loadState() {
     }
 
     const parsed = JSON.parse(raw);
+    const gachaSequenceIndex = typeof parsed.gachaSequenceIndex === "number" ? parsed.gachaSequenceIndex : fallback.gachaSequenceIndex;
     return {
       ...fallback,
       ...parsed,
+      activeView: AVAILABLE_VIEWS.includes(parsed.activeView) ? parsed.activeView : fallback.activeView,
       audioEnabled: typeof parsed.audioEnabled === "boolean" ? parsed.audioEnabled : fallback.audioEnabled,
-      checkIns: unique([...(parsed.checkIns || []), ...fallback.checkIns]).sort()
+      musicEnabled: typeof parsed.musicEnabled === "boolean" ? parsed.musicEnabled : fallback.musicEnabled,
+      checkIns: unique([...(parsed.checkIns || []), ...fallback.checkIns]).sort(),
+      drawHistory: normalizeDrawHistory(parsed.drawHistory),
+      gachaSequenceIndex: normalizeGachaSequenceIndex(gachaSequenceIndex),
+      gachaCoins: getRemainingGachaCoins(gachaSequenceIndex)
     };
   } catch (error) {
     return fallback;
@@ -3006,10 +3875,12 @@ function buildDefaultState() {
   return {
     activeView: "letter",
     audioEnabled: true,
+    musicEnabled: true,
     calendarMonth: monthString(today),
     checkIns: seededCheckIns,
     loveNotes: 12,
     gachaCoins: DEFAULT_GACHA_COINS,
+    gachaSequenceIndex: 0,
     hugsSent: 0,
     drawHistory: []
   };
@@ -3021,7 +3892,7 @@ function unique(list) {
 
 function getRequestedView() {
   const requested = new URLSearchParams(window.location.search).get("view") || window.location.hash.replace("#", "");
-  return ["letter", "gacha", "daily"].includes(requested) ? requested : null;
+  return AVAILABLE_VIEWS.includes(requested) ? requested : null;
 }
 
 function updateLocationHash(view) {

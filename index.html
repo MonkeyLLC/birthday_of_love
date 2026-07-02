@@ -9,7 +9,7 @@
     <title>Sweet Heart Birthday Gift</title>
     <meta
       name="description"
-      content="一个手机端优先的生日告白网页，包含情书、抽奖和每日签到。"
+      content="一个手机端优先的生日告白网页，包含首页和抽奖惊喜。"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -54,17 +54,17 @@
       </header>
 
       <main class="screen-stack">
-        <section class="screen is-active" data-view="letter" aria-labelledby="letter-title">
+        <section class="screen is-active" data-view="letter" aria-label="生日视频">
           <div class="glass-card hero-card">
             <span class="pill pill--secondary" id="journey-chip">生日倒计时</span>
             <p class="hero-card__number" id="journey-number">35 天</p>
-            <p class="hero-card__copy" id="journey-copy"></p>
+            <p class="hero-card__copy" id="journey-copy" hidden></p>
             <div class="hero-card__meta" id="journey-meta"></div>
           </div>
 
-          <section class="memory-grid" id="memory-grid" aria-label="回忆画廊"></section>
+          <section class="memory-grid" id="memory-grid" aria-label="生日视频"></section>
 
-          <article class="glass-card letter-card">
+          <article class="glass-card letter-card" hidden aria-hidden="true">
             <div class="letter-card__sparkle" aria-hidden="true">
               <span class="material-symbols-outlined filled">auto_awesome</span>
             </div>
@@ -77,7 +77,7 @@
             </button>
           </article>
 
-          <section class="glass-card pocket-card">
+          <section class="glass-card pocket-card" hidden aria-hidden="true">
             <div class="section-heading">
               <div>
                 <p class="section-heading__eyebrow">礼物口袋</p>
@@ -327,7 +327,7 @@
             <span class="material-symbols-outlined">casino</span>
             抽一发
           </button>
-          <p class="gacha-status" id="gacha-status">摇一摇，看看今天掉什么。</p>
+          <p class="gacha-status" id="gacha-status" hidden>摇一摇，看看今天掉什么。</p>
 
           <section class="glass-card gift-card" id="gift-card">
             <div class="section-heading">
@@ -350,102 +350,16 @@
           </section>
         </section>
 
-        <section class="screen" data-view="daily" aria-labelledby="daily-title">
-          <div class="glass-card progress-card">
-            <div class="progress-card__header">
-              <div>
-                <h2 id="daily-title">每日签到</h2>
-                <p>把喜欢存进每天的小日常里。</p>
-              </div>
-              <div class="streak-badge">
-                <strong id="streak-number">4</strong>
-                <span>连续签到</span>
-              </div>
-            </div>
-
-            <div class="progress-bar__meta">
-              <span>本月进度</span>
-              <span id="month-progress-text">4 / 30</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-bar__fill" id="month-progress-bar"></div>
-            </div>
-          </div>
-
-          <section class="glass-card calendar-card">
-            <div class="calendar-card__header">
-              <button class="icon-button icon-button--soft" id="prev-month" type="button" aria-label="上个月">
-                <span class="material-symbols-outlined">chevron_left</span>
-              </button>
-              <h3 id="calendar-title">2026 年 5 月</h3>
-              <button class="icon-button icon-button--soft" id="next-month" type="button" aria-label="下个月">
-                <span class="material-symbols-outlined">chevron_right</span>
-              </button>
-            </div>
-
-            <div class="calendar-weekdays" aria-hidden="true">
-              <span>日</span>
-              <span>一</span>
-              <span>二</span>
-              <span>三</span>
-              <span>四</span>
-              <span>五</span>
-              <span>六</span>
-            </div>
-            <div class="calendar-grid" id="calendar-grid"></div>
-
-            <button class="primary-button primary-button--wide" id="checkin-button" type="button">
-              <span class="material-symbols-outlined">calendar_month</span>
-              今天也要签到
-            </button>
-          </section>
-
-          <section class="glass-card rewards-card">
-            <div class="section-heading">
-              <div>
-                <p class="section-heading__eyebrow">Collected Rewards</p>
-                <h3>已经攒下的小礼物</h3>
-              </div>
-            </div>
-            <div class="reward-grid">
-              <article class="reward-tile">
-                <span class="reward-tile__icon reward-tile__icon--lavender material-symbols-outlined filled">
-                  auto_stories
-                </span>
-                <strong id="love-notes-count">12</strong>
-                <span>Love Notes</span>
-              </article>
-              <article class="reward-tile">
-                <span class="reward-tile__icon reward-tile__icon--pink material-symbols-outlined filled">
-                  redeem
-                </span>
-                <strong id="reward-coins-count">5</strong>
-                <span>Gacha Coins</span>
-              </article>
-              <article class="reward-tile">
-                <span class="reward-tile__icon reward-tile__icon--cream material-symbols-outlined filled">
-                  celebration
-                </span>
-                <strong id="surprise-count">0</strong>
-                <span>Opened Gifts</span>
-              </article>
-            </div>
-          </section>
-        </section>
       </main>
 
       <nav class="tabbar glass-card" aria-label="底部导航">
         <button class="tab-button is-active" data-view="letter" type="button">
           <span class="material-symbols-outlined filled">auto_stories</span>
-          <span>情书</span>
+          <span>首页</span>
         </button>
         <button class="tab-button" data-view="gacha" type="button">
           <span class="material-symbols-outlined filled">redeem</span>
           <span>抽奖</span>
-        </button>
-        <button class="tab-button" data-view="daily" type="button">
-          <span class="material-symbols-outlined filled">calendar_month</span>
-          <span>签到</span>
         </button>
       </nav>
     </div>
@@ -469,14 +383,19 @@
 
     <div class="modal" id="prize-modal" hidden>
       <div class="modal__backdrop" id="modal-backdrop"></div>
-      <div class="modal__dialog glass-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <div class="modal__icon" id="modal-icon">🎁</div>
-        <p class="section-heading__eyebrow">Lucky Draw</p>
-        <h2 id="modal-title">抽到了神秘礼物</h2>
-        <p id="modal-copy"></p>
-        <button class="primary-button primary-button--wide" id="modal-close" type="button">
-          收进礼物口袋
-        </button>
+      <div class="modal__dialog prize-result-modal__dialog glass-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal__icon prize-result-modal__hero" id="modal-icon">🎁</div>
+        <p class="section-heading__eyebrow prize-result-modal__eyebrow">Lucky Draw</p>
+        <h2 class="prize-result-modal__title" id="modal-title">抽到了神秘礼物</h2>
+        <p class="prize-result-modal__copy" id="modal-copy"></p>
+        <div class="prize-result-modal__actions">
+          <button class="utility-button prize-result-modal__reveal" id="modal-reveal-button" type="button" hidden>
+            拆开神秘大礼
+          </button>
+          <button class="primary-button prize-result-modal__action" id="modal-close" type="button">
+            收进礼物口袋
+          </button>
+        </div>
       </div>
     </div>
 
@@ -488,6 +407,13 @@
         </button>
         <img class="image-preview-modal__image" id="image-preview-image" src="" alt="" />
         <p class="image-preview-modal__title" id="image-preview-title"></p>
+      </div>
+    </div>
+
+    <div class="modal video-preview-modal" id="video-preview-modal" hidden>
+      <div class="modal__backdrop" id="video-preview-backdrop"></div>
+      <div class="video-preview-modal__dialog glass-card" role="dialog" aria-modal="true" aria-label="视频预览" tabindex="-1">
+        <video class="video-preview-modal__player" id="video-preview-player" controls playsinline preload="metadata"></video>
       </div>
     </div>
 

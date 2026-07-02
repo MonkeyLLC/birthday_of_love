@@ -1,0 +1,16 @@
+server {
+    listen 80;
+    server_name your-domain.com www.your-domain.com;
+
+    root /var/www/birthday_of_love;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(css|js|png|jpg|jpeg|gif|svg|ico|webp|mp3)$ {
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+}
