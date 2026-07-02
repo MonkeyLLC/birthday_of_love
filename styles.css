@@ -2436,7 +2436,7 @@ button {
   background: linear-gradient(135deg, rgba(255, 212, 223, 0.95), rgba(248, 241, 191, 0.95));
   color: var(--primary-strong);
   box-shadow: 0 10px 20px rgba(255, 192, 210, 0.28);
-  transform: translateY(-6px);
+  transform: translateY(-1px);
 }
 
 .tab-button span:last-child {
