@@ -1,4 +1,5 @@
 const STORAGE_KEY = "sweet-heart-birthday-gift.v1";
+const MUSIC_PLAYER_STATE_VERSION = 2;
 const GSAP = window.gsap ?? null;
 const MATTER = window.Matter ?? null;
 
@@ -52,12 +53,13 @@ const SITE_CONFIG = {
   },
   backgroundMusic: {
     volume: 0.42,
-    tracks: [
-      "assets/audio/music/01-love-is-you.mp3",
-      "assets/audio/music/02-when-you.mp3",
-      "assets/audio/music/03-you-i.mp3",
-      "assets/audio/music/04-simple-love.mp3"
-    ]
+    // 在这里配置歌单：左边是播放器里展示的歌曲名，右边是歌曲文件位置。
+    playlist: {
+      "爱的就是你": "assets/audio/music/01-love-is-you.mp3",
+      "当你": "assets/audio/music/02-when-you.mp3",
+      "You (=I)": "assets/audio/music/03-you-i.mp3",
+      "简单爱": "assets/audio/music/04-simple-love.mp3"
+    }
   },
   prizes: [
     {
@@ -192,8 +194,20 @@ const elements = {
   cakeButton: document.getElementById("cake-button"),
   soundToggleButton: document.getElementById("sound-toggle-button"),
   soundToggleIcon: document.getElementById("sound-toggle-icon"),
+  musicPlayer: document.getElementById("music-player"),
   musicToggleButton: document.getElementById("music-toggle-button"),
   musicToggleIcon: document.getElementById("music-toggle-icon"),
+  musicPlayerToggleButton: document.getElementById("music-player-toggle-button"),
+  musicPlayerToggleIcon: document.getElementById("music-player-toggle-icon"),
+  musicPrevButton: document.getElementById("music-prev-button"),
+  musicNextButton: document.getElementById("music-next-button"),
+  musicPlaylistButton: document.getElementById("music-playlist-button"),
+  musicPlayerTitle: document.getElementById("music-player-title"),
+  musicPlayerMeta: document.getElementById("music-player-meta"),
+  musicProgress: document.getElementById("music-progress"),
+  musicCurrentTime: document.getElementById("music-current-time"),
+  musicDuration: document.getElementById("music-duration"),
+  musicPlaylist: document.getElementById("music-playlist"),
   hugButton: document.getElementById("hug-button"),
   drawButton: document.getElementById("draw-button"),
   restoreGachaButton: document.getElementById("restore-gacha-button"),
@@ -304,8 +318,15 @@ const AUDIO_UI_COPY = Object.freeze({
 const MUSIC_UI_COPY = Object.freeze({
   pauseLabel: "\u6682\u505c\u80cc\u666f\u97f3\u4e50",
   playLabel: "\u7ee7\u7eed\u64ad\u653e\u80cc\u666f\u97f3\u4e50",
+  openPlayerLabel: "\u6253\u5f00\u97f3\u4e50\u64ad\u653e\u5668",
+  closePlayerLabel: "\u6536\u8d77\u97f3\u4e50\u64ad\u653e\u5668",
   playingToast: "\u80cc\u666f\u97f3\u4e50\u7ee7\u7eed\u64ad\u653e\u5566",
-  pausedToast: "\u80cc\u666f\u97f3\u4e50\u5df2\u6682\u505c"
+  pausedToast: "\u80cc\u666f\u97f3\u4e50\u5df2\u6682\u505c",
+  previousLabel: "\u4e0a\u4e00\u9996",
+  nextLabel: "\u4e0b\u4e00\u9996",
+  progressLabel: "\u80cc\u666f\u97f3\u4e50\u64ad\u653e\u8fdb\u5ea6",
+  expandPlaylistLabel: "\u5c55\u5f00\u6b4c\u5355",
+  collapsePlaylistLabel: "\u6536\u8d77\u6b4c\u5355"
 });
 const GACHA_QUICKBAR_COPY = Object.freeze({
   balanceLabel: "\u626d\u86cb\u5e01",
@@ -346,10 +367,12 @@ let memoryVideoUnlocked = null;
 let toastTimer = null;
 let activeVideoPreviewTrigger = null;
 let resolveCapsuleOpen = null;
+let isMusicPlayerOpen = false;
+let isMusicPlaylistOpen = false;
 const managedAudio = new Set();
 const gachaAudio = createGachaAudio();
 let backgroundMusicAudio = null;
-let backgroundMusicTrackIndex = 0;
+let backgroundMusicTrackIndex = state.musicTrackIndex ?? 0;
 let backgroundMusicUnlockListener = null;
 let activePrizeModalRecord = null;
 let activePrizeModalPrize = null;
@@ -668,15 +691,54 @@ function normalizeSoundToggleButton() {
 }
 
 function getBackgroundMusicTracks() {
+  const playlist = SITE_CONFIG.backgroundMusic?.playlist;
+
+  if (playlist && typeof playlist === "object" && !Array.isArray(playlist)) {
+    const playlistTracks = Object.entries(playlist)
+      .map(([title, src], index) => normalizeBackgroundMusicTrack({ title, src }, index))
+      .filter(Boolean);
+
+    if (playlistTracks.length) {
+      return playlistTracks;
+    }
+  }
+
   const tracks = SITE_CONFIG.backgroundMusic?.tracks;
 
   if (!Array.isArray(tracks)) {
     return [];
   }
 
-  return tracks
-    .map((track) => (typeof track === "string" ? track : track?.src))
-    .filter((track) => typeof track === "string" && track.trim());
+  return tracks.map(normalizeBackgroundMusicTrack).filter(Boolean);
+}
+
+function normalizeBackgroundMusicTrack(track, index = 0) {
+  if (typeof track === "string") {
+    const src = track.trim();
+
+    if (!src) {
+      return null;
+    }
+
+    return {
+      id: `track-${index + 1}`,
+      src,
+      title: formatBackgroundMusicTrackTitle(src)
+    };
+  }
+
+  const src = typeof track?.src === "string" ? track.src.trim() : "";
+
+  if (!src) {
+    return null;
+  }
+
+  const title = typeof track.title === "string" && track.title.trim() ? track.title.trim() : formatBackgroundMusicTrackTitle(src);
+  return {
+    id: track.id || `track-${index + 1}`,
+    src,
+    title
+  };
 }
 
 function getBackgroundMusicVolume() {
@@ -696,15 +758,85 @@ function getBackgroundMusicTrackSrc(index = 0) {
     return "";
   }
 
-  const safeIndex = ((index % tracks.length) + tracks.length) % tracks.length;
-  return new URL(tracks[safeIndex], window.location.href).href;
+  const safeIndex = normalizeMusicTrackIndex(index);
+  return new URL(tracks[safeIndex].src, window.location.href).href;
+}
+
+function getBackgroundMusicTrack(index = 0) {
+  const tracks = getBackgroundMusicTracks();
+
+  if (!tracks.length) {
+    return null;
+  }
+
+  return tracks[normalizeMusicTrackIndex(index)] ?? null;
+}
+
+function normalizeMusicTrackIndex(index = 0) {
+  const trackCount = getBackgroundMusicTracks().length;
+
+  if (!trackCount) {
+    return 0;
+  }
+
+  return ((Number(index) || 0) % trackCount + trackCount) % trackCount;
+}
+
+function formatBackgroundMusicTrackTitle(src) {
+  const fileName = String(src)
+    .split(/[?#]/)[0]
+    .split("/")
+    .pop()
+    ?.replace(/\.[^.]+$/, "")
+    ?.replace(/^\d+[-_ ]*/, "")
+    ?.trim();
+
+  if (!fileName) {
+    return "Untitled Track";
+  }
+
+  return fileName
+    .split(/[-_ ]+/)
+    .filter(Boolean)
+    .map((part) => (part.length === 1 ? part.toUpperCase() : `${part.charAt(0).toUpperCase()}${part.slice(1)}`))
+    .join(" ");
+}
+
+function formatMusicTrackCounter(index, trackCount) {
+  return `${String(index + 1).padStart(2, "0")} / ${String(trackCount).padStart(2, "0")}`;
+}
+
+function formatAudioTime(seconds) {
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return "0:00";
+  }
+
+  const safeSeconds = Math.floor(seconds);
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainder = String(safeSeconds % 60).padStart(2, "0");
+  return `${minutes}:${remainder}`;
 }
 
 function normalizeMusicToggleButton() {
   if (!getBackgroundMusicTracks().length) {
+    isMusicPlayerOpen = false;
+    isMusicPlaylistOpen = false;
     elements.musicToggleButton?.remove();
+    elements.musicPlayer?.remove();
+    elements.musicPlayer = null;
     elements.musicToggleButton = null;
     elements.musicToggleIcon = null;
+    elements.musicPlayerToggleButton = null;
+    elements.musicPlayerToggleIcon = null;
+    elements.musicPrevButton = null;
+    elements.musicNextButton = null;
+    elements.musicPlaylistButton = null;
+    elements.musicPlayerTitle = null;
+    elements.musicPlayerMeta = null;
+    elements.musicProgress = null;
+    elements.musicCurrentTime = null;
+    elements.musicDuration = null;
+    elements.musicPlaylist = null;
     return;
   }
 
@@ -713,15 +845,15 @@ function normalizeMusicToggleButton() {
   button.className = "icon-button music-toggle-fab";
   button.id = "music-toggle-button";
   button.type = "button";
-  button.setAttribute("role", "switch");
-  button.setAttribute("aria-checked", "true");
-  button.setAttribute("aria-label", MUSIC_UI_COPY.pauseLabel);
-  button.title = MUSIC_UI_COPY.pauseLabel;
+  button.setAttribute("aria-controls", "music-player");
+  button.setAttribute("aria-expanded", "false");
+  button.setAttribute("aria-label", MUSIC_UI_COPY.openPlayerLabel);
+  button.title = MUSIC_UI_COPY.openPlayerLabel;
 
   const icon = document.createElement("span");
   icon.className = "material-symbols-outlined filled";
   icon.id = "music-toggle-icon";
-  icon.textContent = "pause_circle";
+  icon.textContent = "queue_music";
 
   button.append(icon);
   elements.musicToggleButton?.remove();
@@ -750,8 +882,14 @@ function initializeBackgroundMusic() {
     audio.setAttribute("playsinline", "");
     audio.addEventListener("ended", handleBackgroundMusicEnded);
     audio.addEventListener("error", handleBackgroundMusicError);
+    audio.addEventListener("loadedmetadata", renderMusicPlayer);
+    audio.addEventListener("durationchange", renderMusicProgress);
+    audio.addEventListener("timeupdate", renderMusicProgress);
+    audio.addEventListener("play", renderMusicPlayer);
+    audio.addEventListener("pause", renderMusicPlayer);
     backgroundMusicAudio = audio;
     audio.load();
+    renderMusicPlayer();
     syncBackgroundMusicPlayback();
   } catch (error) {
     backgroundMusicAudio = null;
@@ -759,7 +897,7 @@ function initializeBackgroundMusic() {
 }
 
 function handleBackgroundMusicEnded() {
-  advanceBackgroundMusicTrack();
+  advanceBackgroundMusicTrack(1, { forcePlay: true });
 }
 
 function handleBackgroundMusicError() {
@@ -767,7 +905,7 @@ function handleBackgroundMusicError() {
     return;
   }
 
-  advanceBackgroundMusicTrack();
+  advanceBackgroundMusicTrack(1, { forcePlay: state.musicEnabled });
 }
 
 function loadBackgroundMusicTrack(index) {
@@ -781,27 +919,46 @@ function loadBackgroundMusicTrack(index) {
     return false;
   }
 
-  backgroundMusicTrackIndex = index;
+  backgroundMusicTrackIndex = normalizeMusicTrackIndex(index);
+  state.musicTrackIndex = backgroundMusicTrackIndex;
   backgroundMusicAudio.pause();
   backgroundMusicAudio.src = src;
   backgroundMusicAudio.load();
+  saveState();
+  renderMusicPlayer();
   return true;
 }
 
-function advanceBackgroundMusicTrack() {
+function playBackgroundMusicTrack(index, options = {}) {
+  const { forcePlay = true } = options;
+
+  if (!backgroundMusicAudio) {
+    initializeBackgroundMusic();
+  }
+
+  if (!backgroundMusicAudio || !loadBackgroundMusicTrack(index)) {
+    return;
+  }
+
+  if (forcePlay) {
+    setMusicEnabled(true, { silent: true });
+    return;
+  }
+
+  syncBackgroundMusicPlayback();
+  renderMusicPlayer();
+}
+
+function advanceBackgroundMusicTrack(step = 1, options = {}) {
   const tracks = getBackgroundMusicTracks();
+  const { forcePlay = state.musicEnabled } = options;
 
   if (!tracks.length || !backgroundMusicAudio) {
     return;
   }
 
-  const nextTrackIndex = (backgroundMusicTrackIndex + 1) % tracks.length;
-
-  if (!loadBackgroundMusicTrack(nextTrackIndex)) {
-    return;
-  }
-
-  syncBackgroundMusicPlayback();
+  const nextTrackIndex = normalizeMusicTrackIndex(backgroundMusicTrackIndex + step);
+  playBackgroundMusicTrack(nextTrackIndex, { forcePlay });
 }
 
 function isVideoPreviewOpen() {
@@ -901,15 +1058,154 @@ function renderMusicToggle() {
     return;
   }
 
+  const label = isMusicPlayerOpen ? MUSIC_UI_COPY.closePlayerLabel : MUSIC_UI_COPY.openPlayerLabel;
+
+  elements.musicToggleButton.setAttribute("aria-expanded", String(isMusicPlayerOpen));
+  elements.musicToggleButton.setAttribute("aria-label", label);
+  elements.musicToggleButton.title = label;
+  elements.musicToggleButton.classList.toggle("is-muted", !state.musicEnabled);
+  elements.musicToggleButton.classList.toggle("is-active", isMusicPlayerOpen);
+  elements.musicToggleIcon.textContent = "queue_music";
+  elements.musicToggleIcon.classList.add("filled");
+}
+
+function renderMusicPlayerToggle() {
+  if (!elements.musicPlayerToggleButton || !elements.musicPlayerToggleIcon) {
+    return;
+  }
+
   const enabled = state.musicEnabled;
   const label = enabled ? MUSIC_UI_COPY.pauseLabel : MUSIC_UI_COPY.playLabel;
 
-  elements.musicToggleButton.setAttribute("aria-checked", String(enabled));
-  elements.musicToggleButton.setAttribute("aria-label", label);
-  elements.musicToggleButton.title = label;
-  elements.musicToggleButton.classList.toggle("is-muted", !enabled);
-  elements.musicToggleIcon.textContent = enabled ? "pause_circle" : "play_circle";
-  elements.musicToggleIcon.classList.toggle("filled", enabled);
+  elements.musicPlayerToggleButton.setAttribute("aria-checked", String(enabled));
+  elements.musicPlayerToggleButton.setAttribute("aria-label", label);
+  elements.musicPlayerToggleButton.title = label;
+  elements.musicPlayerToggleButton.classList.toggle("is-muted", !enabled);
+  elements.musicPlayerToggleIcon.textContent = enabled ? "pause_circle" : "play_circle";
+  elements.musicPlayerToggleIcon.classList.toggle("filled", enabled);
+}
+
+function renderMusicProgress() {
+  if (!elements.musicProgress || !elements.musicCurrentTime || !elements.musicDuration) {
+    return;
+  }
+
+  const duration = Number.isFinite(backgroundMusicAudio?.duration) ? backgroundMusicAudio.duration : 0;
+  const currentTime = Number.isFinite(backgroundMusicAudio?.currentTime) ? backgroundMusicAudio.currentTime : 0;
+  const ratio = duration > 0 ? Math.min(currentTime / duration, 1) : 0;
+  const safeMax = duration > 0 ? duration : 1;
+  const safeValue = duration > 0 ? Math.min(currentTime, safeMax) : 0;
+
+  elements.musicProgress.disabled = duration <= 0;
+  elements.musicProgress.max = String(safeMax);
+  elements.musicProgress.value = String(safeValue);
+  elements.musicProgress.style.setProperty("--music-progress-percent", `${ratio * 100}%`);
+  elements.musicCurrentTime.textContent = formatAudioTime(currentTime);
+  elements.musicDuration.textContent = formatAudioTime(duration);
+}
+
+function renderMusicPlaylist() {
+  if (!elements.musicPlaylist) {
+    return;
+  }
+
+  const tracks = getBackgroundMusicTracks();
+  elements.musicPlaylist.hidden = !isMusicPlaylistOpen || !tracks.length;
+
+  if (!tracks.length) {
+    elements.musicPlaylist.innerHTML = "";
+    return;
+  }
+
+  elements.musicPlaylist.innerHTML = tracks
+    .map((track, index) => {
+      const isActive = index === backgroundMusicTrackIndex;
+      const statusIcon = isActive ? (state.musicEnabled ? "graphic_eq" : "play_circle") : "music_note";
+
+      return `
+        <button
+          class="music-track${isActive ? " is-active" : ""}"
+          type="button"
+          data-track-index="${index}"
+          aria-pressed="${isActive ? "true" : "false"}"
+        >
+          <span class="music-track__index">${String(index + 1).padStart(2, "0")}</span>
+          <span class="music-track__copy">
+            <strong>${track.title}</strong>
+            <span>Track ${String(index + 1).padStart(2, "0")}</span>
+          </span>
+          <span class="material-symbols-outlined music-track__status${isActive ? " filled" : ""}">${statusIcon}</span>
+        </button>
+      `;
+    })
+    .join("");
+}
+
+function renderMusicPlayer() {
+  if (!elements.musicPlayer) {
+    return;
+  }
+
+  const tracks = getBackgroundMusicTracks();
+  const activeTrack = getBackgroundMusicTrack(backgroundMusicTrackIndex);
+
+  elements.musicPlayer.hidden = !tracks.length;
+  elements.musicPlayer.setAttribute("aria-hidden", String(!isMusicPlayerOpen));
+  elements.musicPlayer.classList.toggle("is-open", isMusicPlayerOpen);
+
+  if (!tracks.length || !activeTrack) {
+    return;
+  }
+
+  if (elements.musicPlayerTitle) {
+    elements.musicPlayerTitle.textContent = activeTrack.title;
+  }
+
+  if (elements.musicPlayerMeta) {
+    elements.musicPlayerMeta.textContent = formatMusicTrackCounter(backgroundMusicTrackIndex, tracks.length);
+  }
+
+  renderMusicPlayerToggle();
+
+  if (elements.musicPlaylistButton) {
+    const playlistLabel = isMusicPlaylistOpen ? MUSIC_UI_COPY.collapsePlaylistLabel : MUSIC_UI_COPY.expandPlaylistLabel;
+    elements.musicPlaylistButton.setAttribute("aria-expanded", String(isMusicPlaylistOpen));
+    elements.musicPlaylistButton.setAttribute("aria-label", playlistLabel);
+    elements.musicPlaylistButton.title = playlistLabel;
+    elements.musicPlaylistButton.classList.toggle("is-active", isMusicPlaylistOpen);
+  }
+
+  elements.musicPlayer.classList.toggle("is-expanded", isMusicPlaylistOpen);
+  elements.musicPrevButton?.setAttribute("aria-label", MUSIC_UI_COPY.previousLabel);
+  if (elements.musicPrevButton) {
+    elements.musicPrevButton.title = MUSIC_UI_COPY.previousLabel;
+  }
+  elements.musicNextButton?.setAttribute("aria-label", MUSIC_UI_COPY.nextLabel);
+  if (elements.musicNextButton) {
+    elements.musicNextButton.title = MUSIC_UI_COPY.nextLabel;
+  }
+  elements.musicProgress?.setAttribute("aria-label", MUSIC_UI_COPY.progressLabel);
+  renderMusicProgress();
+  renderMusicPlaylist();
+}
+
+function setMusicPlayerOpen(open) {
+  const nextOpen = Boolean(open) && getBackgroundMusicTracks().length > 0;
+
+  if (isMusicPlayerOpen === nextOpen) {
+    renderMusicToggle();
+    renderMusicPlayer();
+    return;
+  }
+
+  isMusicPlayerOpen = nextOpen;
+
+  if (!isMusicPlayerOpen) {
+    isMusicPlaylistOpen = false;
+  }
+
+  renderMusicToggle();
+  renderMusicPlayer();
 }
 
 function setAudioEnabled(enabled, options = {}) {
@@ -985,6 +1281,7 @@ function setMusicEnabled(enabled, options = {}) {
 
   if (state.musicEnabled === enabled) {
     renderMusicToggle();
+    renderMusicPlayer();
     syncBackgroundMusicPlayback();
     return;
   }
@@ -996,6 +1293,7 @@ function setMusicEnabled(enabled, options = {}) {
   }
 
   renderMusicToggle();
+  renderMusicPlayer();
   saveState();
   syncBackgroundMusicPlayback();
 
@@ -1005,7 +1303,89 @@ function setMusicEnabled(enabled, options = {}) {
 }
 
 function handleMusicToggle() {
+  setMusicPlayerOpen(!isMusicPlayerOpen);
+}
+
+function handleMusicPlayerPlaybackToggle() {
   setMusicEnabled(!state.musicEnabled);
+}
+
+function setMusicPlaylistOpen(open) {
+  isMusicPlaylistOpen = Boolean(open) && getBackgroundMusicTracks().length > 0;
+  renderMusicPlayer();
+}
+
+function handleMusicPlaylistToggle() {
+  if (!isMusicPlayerOpen) {
+    setMusicPlayerOpen(true);
+  }
+
+  setMusicPlaylistOpen(!isMusicPlaylistOpen);
+}
+
+function handleMusicPlayerOutsidePointerDown(event) {
+  if (!isMusicPlayerOpen) {
+    return;
+  }
+
+  const target = event.target;
+
+  if (elements.musicPlayer?.contains(target) || elements.musicToggleButton?.contains(target)) {
+    return;
+  }
+
+  setMusicPlayerOpen(false);
+}
+
+function handlePreviousMusicTrack() {
+  if (backgroundMusicAudio && backgroundMusicAudio.currentTime > 3) {
+    backgroundMusicAudio.currentTime = 0;
+    renderMusicProgress();
+    return;
+  }
+
+  advanceBackgroundMusicTrack(-1, { forcePlay: true });
+}
+
+function handleNextMusicTrack() {
+  advanceBackgroundMusicTrack(1, { forcePlay: true });
+}
+
+function handleMusicProgressInput(event) {
+  if (!backgroundMusicAudio) {
+    return;
+  }
+
+  const nextTime = Number(event.currentTarget.value);
+
+  if (!Number.isFinite(nextTime)) {
+    return;
+  }
+
+  try {
+    backgroundMusicAudio.currentTime = Math.max(0, Math.min(nextTime, backgroundMusicAudio.duration || nextTime));
+  } catch (error) {
+    return;
+  }
+
+  renderMusicProgress();
+}
+
+function handleMusicPlaylistSelect(event) {
+  const trackButton = event.target.closest("[data-track-index]");
+
+  if (!trackButton) {
+    return;
+  }
+
+  const trackIndex = Number(trackButton.dataset.trackIndex);
+
+  if (!Number.isFinite(trackIndex)) {
+    return;
+  }
+
+  playBackgroundMusicTrack(trackIndex, { forcePlay: true });
+  setMusicPlaylistOpen(false);
 }
 
 function playGachaSound(key) {
@@ -1086,6 +1466,12 @@ function bindEvents() {
   elements.memoryGrid?.addEventListener("click", handleMemoryVideoClick);
   elements.soundToggleButton?.addEventListener("click", handleAudioToggle);
   elements.musicToggleButton?.addEventListener("click", handleMusicToggle);
+  elements.musicPlayerToggleButton?.addEventListener("click", handleMusicPlayerPlaybackToggle);
+  elements.musicPrevButton?.addEventListener("click", handlePreviousMusicTrack);
+  elements.musicNextButton?.addEventListener("click", handleNextMusicTrack);
+  elements.musicPlaylistButton?.addEventListener("click", handleMusicPlaylistToggle);
+  elements.musicProgress?.addEventListener("input", handleMusicProgressInput);
+  elements.musicPlaylist?.addEventListener("click", handleMusicPlaylistSelect);
 
   elements.cakeButton.addEventListener("click", () => {
     const countdown = getBirthdayCountdownParts();
@@ -1124,6 +1510,7 @@ function bindEvents() {
   elements.imagePreviewClose?.addEventListener("click", () => closeImagePreview());
   elements.imagePreviewBackdrop?.addEventListener("click", () => closeImagePreview());
   elements.videoPreviewBackdrop?.addEventListener("click", closeVideoPreview);
+  document.addEventListener("pointerdown", handleMusicPlayerOutsidePointerDown, true);
   document.addEventListener("click", handlePrizeImagePreviewClick);
   window.addEventListener("resize", handleGachaViewportResize);
 
@@ -1144,6 +1531,11 @@ function bindEvents() {
 
       if (!elements.imagePreviewModal?.hidden) {
         closeImagePreview();
+        return;
+      }
+
+      if (isMusicPlayerOpen) {
+        setMusicPlayerOpen(false);
         return;
       }
 
@@ -1544,6 +1936,7 @@ function degreesToRadians(degrees) {
 function renderApp() {
   renderAudioToggle();
   renderMusicToggle();
+  renderMusicPlayer();
   renderActiveView();
   renderJourneyCard();
   renderGachaPanel();
@@ -3833,12 +4226,22 @@ function loadState() {
 
     const parsed = JSON.parse(raw);
     const gachaSequenceIndex = typeof parsed.gachaSequenceIndex === "number" ? parsed.gachaSequenceIndex : fallback.gachaSequenceIndex;
+    const musicTrackIndex = typeof parsed.musicTrackIndex === "number" ? parsed.musicTrackIndex : fallback.musicTrackIndex;
+    const musicPlayerStateVersion = Number.isInteger(parsed.musicPlayerStateVersion) ? parsed.musicPlayerStateVersion : 0;
+    const shouldResetLegacyMusicPreference = musicPlayerStateVersion < MUSIC_PLAYER_STATE_VERSION;
+
     return {
       ...fallback,
       ...parsed,
       activeView: AVAILABLE_VIEWS.includes(parsed.activeView) ? parsed.activeView : fallback.activeView,
       audioEnabled: typeof parsed.audioEnabled === "boolean" ? parsed.audioEnabled : fallback.audioEnabled,
-      musicEnabled: typeof parsed.musicEnabled === "boolean" ? parsed.musicEnabled : fallback.musicEnabled,
+      musicEnabled: shouldResetLegacyMusicPreference
+        ? fallback.musicEnabled
+        : typeof parsed.musicEnabled === "boolean"
+          ? parsed.musicEnabled
+          : fallback.musicEnabled,
+      musicTrackIndex: normalizeMusicTrackIndex(musicTrackIndex),
+      musicPlayerStateVersion: MUSIC_PLAYER_STATE_VERSION,
       checkIns: unique([...(parsed.checkIns || []), ...fallback.checkIns]).sort(),
       drawHistory: normalizeDrawHistory(parsed.drawHistory),
       gachaSequenceIndex: normalizeGachaSequenceIndex(gachaSequenceIndex),
@@ -3876,6 +4279,8 @@ function buildDefaultState() {
     activeView: "letter",
     audioEnabled: true,
     musicEnabled: true,
+    musicPlayerStateVersion: MUSIC_PLAYER_STATE_VERSION,
+    musicTrackIndex: 0,
     calendarMonth: monthString(today),
     checkIns: seededCheckIns,
     loveNotes: 12,
