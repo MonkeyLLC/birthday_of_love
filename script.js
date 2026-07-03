@@ -10,9 +10,9 @@ const SITE_CONFIG = {
   birthday: {
     year: 2026,
     month: 7,
-    day: 5,
-    hour: 0,
-    minute: 0,
+    day: 4,
+    hour: 1,
+    minute: 25,
     second: 0
   },
   relationshipStart: "2022-02-14",
