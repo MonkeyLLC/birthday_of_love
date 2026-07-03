@@ -36,8 +36,6 @@ New-Item -ItemType Directory -Path $siteRoot -Force | Out-Null
 
 $itemsToCopy = @(
     "index.html",
-    "styles.css",
-    "script.js",
     "assets"
 )
 
@@ -50,6 +48,41 @@ foreach ($item in $itemsToCopy) {
 
     Copy-Item -LiteralPath $sourcePath -Destination $siteRoot -Recurse -Force
 }
+
+$indexPath = Join-Path $siteRoot "index.html"
+$indexHtml = Get-Content -LiteralPath $indexPath -Raw -Encoding UTF8
+
+$cacheBustedFiles = @(
+    @{
+        Source = "styles.css"
+        TargetPattern = "styles.{0}.css"
+        Reference = "./styles.css"
+    },
+    @{
+        Source = "script.js"
+        TargetPattern = "script.{0}.js"
+        Reference = "./script.js"
+    }
+)
+
+foreach ($file in $cacheBustedFiles) {
+    $sourcePath = Join-Path $projectRoot $file.Source
+
+    if (-not (Test-Path -LiteralPath $sourcePath)) {
+        throw "Missing required deploy item: $($file.Source)"
+    }
+
+    $hash = (Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash.Substring(0, 8).ToLowerInvariant()
+    $targetName = [string]::Format($file.TargetPattern, $hash)
+    $targetPath = Join-Path $siteRoot $targetName
+
+    Copy-Item -LiteralPath $sourcePath -Destination $targetPath -Force
+
+    $versionedReference = "./$targetName"
+    $indexHtml = $indexHtml.Replace($file.Reference, $versionedReference)
+}
+
+Set-Content -LiteralPath $indexPath -Value $indexHtml -Encoding UTF8
 
 Compress-Archive -Path (Join-Path $siteRoot "*") -DestinationPath $zipPath -Force
 

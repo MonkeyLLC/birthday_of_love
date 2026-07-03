@@ -5,12 +5,31 @@ server {
     root /var/www/birthday_of_love;
     index index.html;
 
-    location / {
-        try_files $uri $uri/ /index.html;
+    location = /index.html {
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+        add_header Expires "0";
     }
 
-    location ~* \.(css|js|png|jpg|jpeg|gif|svg|ico|webp|mp3)$ {
+    location / {
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+        add_header Expires "0";
+    }
+
+    location ~* \.[0-9a-f]{8}\.(css|js)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location ~* \.(png|jpg|jpeg|gif|svg|ico|webp|mp3|mp4)$ {
         expires 7d;
         add_header Cache-Control "public";
+    }
+
+    location ~* \.(css|js)$ {
+        expires -1;
+        add_header Cache-Control "no-cache";
     }
 }
