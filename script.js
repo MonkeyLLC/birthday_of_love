@@ -55,6 +55,7 @@ const SITE_CONFIG = {
     volume: 0.42,
     // 在这里配置歌单：左边是播放器里展示的歌曲名，右边是歌曲文件位置。
     playlist: {
+      "遇到":"assets/audio/music/01-yudao.mp3",
       "爱的就是你": "assets/audio/music/01-love-is-you.mp3",
       "当你": "assets/audio/music/02-when-you.mp3",
       "You (=I)": "assets/audio/music/03-you-i.mp3",
@@ -1493,7 +1494,7 @@ function bindEvents() {
 
   elements.drawButton.addEventListener("click", handleDraw);
   elements.machineKnob.addEventListener("click", handleDraw);
-  elements.restoreGachaButton.addEventListener("click", handleRestoreGachaCoins);
+  elements.restoreGachaButton?.addEventListener("click", handleRestoreGachaCoins);
   elements.giftLaunch.addEventListener("click", openGiftModal);
   elements.recordLaunch?.addEventListener("click", openRecordModal);
   elements.revealCapsule.addEventListener("click", handleRevealCapsule);
@@ -2336,6 +2337,10 @@ function renderDrawButtonState() {
 }
 
 function renderRestoreButtonState() {
+  if (!elements.restoreGachaButton) {
+    return;
+  }
+
   const locked = gachaState.phase !== GACHA_PHASE.IDLE;
   elements.restoreGachaButton.disabled = locked;
   elements.restoreGachaButton.textContent = locked ? "扭蛋进行中" : "恢复次数";
